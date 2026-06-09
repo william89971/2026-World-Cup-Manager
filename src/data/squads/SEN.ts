@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Senegal — 2026 World Cup squad
+export const SEN: RawSquad = [
+  { name: 'Édouard Mendy', number: 1, position: 'GK', age: 34, overall: 82 },
+  { name: 'Mory Diaw', number: 16, position: 'GK', age: 32, overall: 74 },
+  { name: 'Yehvann Diouf', number: 23, position: 'GK', age: 26, overall: 73 },
+  { name: 'Kalidou Koulibaly', number: 3, position: 'CB', age: 34, overall: 82 },
+  { name: 'Moussa Niakhaté', number: 22, position: 'CB', age: 30, overall: 79 },
+  { name: 'Abdoulaye Seck', number: 4, position: 'CB', age: 33, overall: 75 },
+  { name: 'Mamadou Sarr', number: 13, position: 'CB', age: 21, overall: 76 },
+  { name: 'Krépin Diatta', number: 21, position: 'RB', age: 27, overall: 79 },
+  { name: 'Antoine Mendy', number: 12, position: 'RB', age: 22, overall: 74 },
+  { name: 'El Hadji Malick Diouf', number: 17, position: 'LB', age: 21, overall: 77 },
+  { name: 'Ismaïl Jakobs', number: 14, position: 'LB', age: 26, overall: 77 },
+  { name: 'Idrissa Gana Gueye', number: 5, position: 'CDM', age: 36, overall: 80 },
+  { name: 'Pape Matar Sarr', number: 6, position: 'CM', age: 23, overall: 81 },
+  { name: 'Lamine Camara', number: 15, position: 'CM', age: 22, overall: 79 },
+  { name: 'Habib Diarra', number: 8, position: 'CM', age: 22, overall: 78 },
+  { name: 'Pape Gueye', number: 7, position: 'CDM', age: 27, overall: 77 },
+  { name: 'Pathé Ciss', number: 18, position: 'CDM', age: 31, overall: 75 },
+  { name: 'Sadio Mané', number: 10, position: 'LW', age: 34, overall: 83, star: true },
+  { name: 'Ismaïla Sarr', number: 11, position: 'RW', age: 28, overall: 81 },
+  { name: 'Iliman Ndiaye', number: 20, position: 'LW', age: 26, overall: 80 },
+  { name: 'Nicolas Jackson', number: 9, position: 'ST', age: 24, overall: 81 },
+  { name: 'Assane Diao', number: 19, position: 'RW', age: 20, overall: 77 },
+  { name: 'Ibrahim Mbaye', number: 24, position: 'RW', age: 18, overall: 74 },
+  { name: 'Chérif Ndiaye', number: 25, position: 'ST', age: 29, overall: 73 },
+  { name: 'Bamba Dieng', number: 26, position: 'ST', age: 26, overall: 73 },
+  { name: 'Bara Ndiaye', number: 2, position: 'CM', age: 20, overall: 73 },
+]

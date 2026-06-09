@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Norway — 2026 World Cup squad
+export const NOR: RawSquad = [
+  { name: 'Ørjan Nyland', number: 1, position: 'GK', age: 35, overall: 76 },
+  { name: 'Egil Selvik', number: 12, position: 'GK', age: 29, overall: 71 },
+  { name: 'Sander Tangvik', number: 23, position: 'GK', age: 22, overall: 69 },
+  { name: 'Kristoffer Ajer', number: 5, position: 'CB', age: 28, overall: 79 },
+  { name: 'Leo Østigård', number: 4, position: 'CB', age: 26, overall: 78 },
+  { name: 'Torbjørn Heggem', number: 6, position: 'CB', age: 26, overall: 75 },
+  { name: 'Julian Ryerson', number: 2, position: 'RB', age: 28, overall: 79 },
+  { name: 'Marcus Pedersen', number: 3, position: 'RB', age: 25, overall: 74 },
+  { name: 'David Møller Wolfe', number: 16, position: 'LB', age: 23, overall: 75 },
+  { name: 'Fredrik Bjørkan', number: 18, position: 'LB', age: 27, overall: 73 },
+  { name: 'Sondre Langås', number: 15, position: 'CB', age: 24, overall: 71 },
+  { name: 'Henrik Falchener', number: 22, position: 'RB', age: 24, overall: 68 },
+  { name: 'Martin Ødegaard', number: 10, position: 'CAM', age: 27, overall: 87, star: true },
+  { name: 'Sander Berge', number: 8, position: 'CM', age: 28, overall: 79 },
+  { name: 'Fredrik Aursnes', number: 7, position: 'CM', age: 30, overall: 80 },
+  { name: 'Patrick Berg', number: 14, position: 'CDM', age: 28, overall: 75 },
+  { name: 'Kristian Thorstvedt', number: 13, position: 'CM', age: 27, overall: 76 },
+  { name: 'Morten Thorsby', number: 19, position: 'CM', age: 29, overall: 74 },
+  { name: 'Thelo Aasgaard', number: 17, position: 'CAM', age: 24, overall: 76 },
+  { name: 'Antonio Nusa', number: 11, position: 'LW', age: 21, overall: 81 },
+  { name: 'Oscar Bobb', number: 20, position: 'RW', age: 22, overall: 78 },
+  { name: 'Andreas Schjelderup', number: 21, position: 'LW', age: 21, overall: 76 },
+  { name: 'Jens Petter Hauge', number: 24, position: 'LW', age: 26, overall: 74 },
+  { name: 'Erling Haaland', number: 9, position: 'ST', age: 25, overall: 91, star: true },
+  { name: 'Alexander Sørloth', number: 26, position: 'ST', age: 30, overall: 82 },
+  { name: 'Jørgen Strand Larsen', number: 25, position: 'ST', age: 26, overall: 79 },
+]

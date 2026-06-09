@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Japan — 2026 World Cup squad
+export const JPN: RawSquad = [
+  { name: 'Zion Suzuki', number: 1, position: 'GK', age: 23, overall: 80 },
+  { name: 'Keisuke Osako', number: 12, position: 'GK', age: 26, overall: 75 },
+  { name: 'Tomoki Hayakawa', number: 23, position: 'GK', age: 27, overall: 73 },
+  { name: 'Ko Itakura', number: 6, position: 'CB', age: 29, overall: 79 },
+  { name: 'Hiroki Ito', number: 8, position: 'CB', age: 27, overall: 79 },
+  { name: 'Takehiro Tomiyasu', number: 5, position: 'CB', age: 27, overall: 78 },
+  { name: 'Tsuyoshi Watanabe', number: 11, position: 'CB', age: 29, overall: 76 },
+  { name: 'Yukinari Sugawara', number: 9, position: 'RB', age: 25, overall: 76 },
+  { name: 'Ayumu Seko', number: 10, position: 'CB', age: 25, overall: 74 },
+  { name: 'Shogo Taniguchi', number: 7, position: 'CB', age: 34, overall: 73 },
+  { name: 'Yuto Nagatomo', number: 4, position: 'LB', age: 39, overall: 71 },
+  { name: 'Junnosuke Suzuki', number: 2, position: 'RB', age: 23, overall: 73 },
+  { name: 'Wataru Endo', number: 3, position: 'CDM', age: 33, overall: 80, star: true },
+  { name: 'Takefusa Kubo', number: 17, position: 'RW', age: 24, overall: 83, star: true },
+  { name: 'Daichi Kamada', number: 16, position: 'CAM', age: 29, overall: 80 },
+  { name: 'Ritsu Doan', number: 15, position: 'RW', age: 27, overall: 80 },
+  { name: 'Ao Tanaka', number: 18, position: 'CM', age: 27, overall: 77 },
+  { name: 'Junya Ito', number: 14, position: 'RM', age: 33, overall: 78 },
+  { name: 'Keito Nakamura', number: 19, position: 'LM', age: 26, overall: 76 },
+  { name: 'Kaishu Sano', number: 20, position: 'CDM', age: 25, overall: 75 },
+  { name: 'Ayase Ueda', number: 21, position: 'ST', age: 27, overall: 78 },
+  { name: 'Daizen Maeda', number: 22, position: 'LM', age: 28, overall: 78 },
+  { name: 'Yuito Suzuki', number: 24, position: 'CAM', age: 24, overall: 75 },
+  { name: 'Koki Ogawa', number: 13, position: 'ST', age: 28, overall: 73 },
+  { name: 'Keisuke Goto', number: 25, position: 'ST', age: 23, overall: 72 },
+  { name: 'Kento Shiogai', number: 26, position: 'LW', age: 25, overall: 72 },
+]

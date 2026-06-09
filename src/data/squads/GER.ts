@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Germany — 2026 World Cup squad
+export const GER: RawSquad = [
+  { name: 'Manuel Neuer', number: 1, position: 'GK', age: 40, overall: 84 },
+  { name: 'Oliver Baumann', number: 22, position: 'GK', age: 36, overall: 80 },
+  { name: 'Alexander Nübel', number: 12, position: 'GK', age: 29, overall: 80 },
+  { name: 'Joshua Kimmich', number: 6, position: 'RB', age: 31, overall: 87, star: true },
+  { name: 'Antonio Rüdiger', number: 2, position: 'CB', age: 33, overall: 85 },
+  { name: 'Jonathan Tah', number: 4, position: 'CB', age: 30, overall: 84 },
+  { name: 'Nico Schlotterbeck', number: 3, position: 'CB', age: 26, overall: 83 },
+  { name: 'Waldemar Anton', number: 5, position: 'CB', age: 29, overall: 78 },
+  { name: 'Malick Thiaw', number: 15, position: 'CB', age: 24, overall: 79 },
+  { name: 'David Raum', number: 18, position: 'LB', age: 28, overall: 80 },
+  { name: 'Nathaniel Brown', number: 16, position: 'LB', age: 23, overall: 75 },
+  { name: 'Florian Wirtz', number: 17, position: 'CAM', age: 23, overall: 88, star: true },
+  { name: 'Jamal Musiala', number: 10, position: 'CAM', age: 23, overall: 88, star: true },
+  { name: 'Aleksandar Pavlović', number: 23, position: 'CDM', age: 22, overall: 81 },
+  { name: 'Angelo Stiller', number: 8, position: 'CM', age: 24, overall: 80 },
+  { name: 'Leon Goretzka', number: 14, position: 'CM', age: 31, overall: 81 },
+  { name: 'Felix Nmecha', number: 19, position: 'CM', age: 25, overall: 77 },
+  { name: 'Leroy Sané', number: 11, position: 'RW', age: 30, overall: 83 },
+  { name: 'Pascal Groß', number: 13, position: 'CM', age: 35, overall: 77 },
+  { name: 'Nadiem Amiri', number: 20, position: 'CM', age: 29, overall: 75 },
+  { name: 'Assan Ouédraogo', number: 24, position: 'CM', age: 20, overall: 73 },
+  { name: 'Kai Havertz', number: 7, position: 'ST', age: 27, overall: 83 },
+  { name: 'Nick Woltemade', number: 9, position: 'ST', age: 24, overall: 80 },
+  { name: 'Deniz Undav', number: 21, position: 'ST', age: 29, overall: 80 },
+  { name: 'Maximilian Beier', number: 25, position: 'ST', age: 23, overall: 77 },
+  { name: 'Jamie Leweling', number: 26, position: 'RW', age: 25, overall: 75 },
+]

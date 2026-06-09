@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Uruguay — 2026 World Cup squad
+export const URU: RawSquad = [
+  { name: 'Sergio Rochet', number: 1, position: 'GK', age: 33, overall: 80 },
+  { name: 'Guillermo Varela', number: 2, position: 'RB', age: 33, overall: 78 },
+  { name: 'José María Giménez', number: 3, position: 'CB', age: 31, overall: 84 },
+  { name: 'Ronald Araújo', number: 4, position: 'CB', age: 27, overall: 85, star: true },
+  { name: 'Matías Viña', number: 5, position: 'LB', age: 28, overall: 77 },
+  { name: 'Rodrigo Bentancur', number: 6, position: 'CM', age: 28, overall: 83 },
+  { name: 'Brian Rodríguez', number: 7, position: 'RW', age: 26, overall: 78 },
+  { name: 'Nicolás de la Cruz', number: 8, position: 'CAM', age: 28, overall: 82 },
+  { name: 'Darwin Núñez', number: 9, position: 'ST', age: 26, overall: 83, star: true },
+  { name: 'Giorgian de Arrascaeta', number: 10, position: 'CAM', age: 32, overall: 83 },
+  { name: 'Facundo Pellistri', number: 11, position: 'RW', age: 24, overall: 77 },
+  { name: 'Fernando Muslera', number: 12, position: 'GK', age: 39, overall: 77 },
+  { name: 'Sebastián Cáceres', number: 13, position: 'CB', age: 26, overall: 78 },
+  { name: 'Santiago Bueno', number: 14, position: 'CB', age: 27, overall: 77 },
+  { name: 'Federico Valverde', number: 15, position: 'CM', age: 27, overall: 89, star: true },
+  { name: 'Mathías Olivera', number: 16, position: 'LB', age: 28, overall: 81 },
+  { name: 'Maximiliano Araújo', number: 17, position: 'LM', age: 26, overall: 78 },
+  { name: 'Manuel Ugarte', number: 18, position: 'CDM', age: 25, overall: 81 },
+  { name: 'Agustín Canobbio', number: 19, position: 'RM', age: 27, overall: 76 },
+  { name: 'Juan Manuel Sanabria', number: 20, position: 'LB', age: 26, overall: 74 },
+  { name: 'Rodrigo Aguirre', number: 21, position: 'ST', age: 31, overall: 76 },
+  { name: 'Joaquín Piquerez', number: 22, position: 'LB', age: 27, overall: 80 },
+  { name: 'Santiago Mele', number: 23, position: 'GK', age: 28, overall: 75 },
+  { name: 'Emiliano Martínez', number: 24, position: 'CM', age: 26, overall: 76 },
+  { name: 'Rodrigo Zalazar', number: 25, position: 'CAM', age: 26, overall: 76 },
+  { name: 'Federico Viñas', number: 26, position: 'ST', age: 27, overall: 74 },
+]

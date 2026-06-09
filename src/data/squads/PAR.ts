@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Paraguay — 2026 World Cup squad
+export const PAR: RawSquad = [
+  { name: 'Roberto Fernández', number: 1, position: 'GK', age: 26, overall: 76 },
+  { name: 'Orlando Gill', number: 12, position: 'GK', age: 26, overall: 72 },
+  { name: 'Gastón Olveira', number: 23, position: 'GK', age: 35, overall: 71 },
+  { name: 'Gustavo Gómez', number: 2, position: 'CB', age: 33, overall: 80, star: true },
+  { name: 'Júnior Alonso', number: 6, position: 'CB', age: 33, overall: 78 },
+  { name: 'Fabián Balbuena', number: 3, position: 'CB', age: 34, overall: 76 },
+  { name: 'Omar Alderete', number: 5, position: 'CB', age: 29, overall: 78 },
+  { name: 'Gustavo Velázquez', number: 4, position: 'CB', age: 28, overall: 73 },
+  { name: 'Juan Cáceres', number: 13, position: 'RB', age: 27, overall: 73 },
+  { name: 'José Canale', number: 14, position: 'CB', age: 26, overall: 73 },
+  { name: 'Alexandro Maidana', number: 15, position: 'LB', age: 24, overall: 72 },
+  { name: 'Andrés Cubas', number: 8, position: 'CDM', age: 30, overall: 78 },
+  { name: 'Diego Gómez', number: 10, position: 'CM', age: 23, overall: 79 },
+  { name: 'Miguel Almirón', number: 11, position: 'RW', age: 32, overall: 78, star: true },
+  { name: 'Ramón Sosa', number: 7, position: 'LW', age: 26, overall: 77 },
+  { name: 'Damián Bobadilla', number: 16, position: 'CM', age: 22, overall: 74 },
+  { name: 'Matías Galarza', number: 17, position: 'CM', age: 23, overall: 73 },
+  { name: 'Braian Ojeda', number: 18, position: 'CDM', age: 25, overall: 73 },
+  { name: 'Maurício', number: 20, position: 'CM', age: 24, overall: 73 },
+  { name: 'Kaku', number: 21, position: 'CAM', age: 31, overall: 73 },
+  { name: 'Julio Enciso', number: 9, position: 'CAM', age: 22, overall: 79, star: true },
+  { name: 'Antonio Sanabria', number: 19, position: 'ST', age: 30, overall: 76 },
+  { name: 'Gabriel Ávalos', number: 22, position: 'ST', age: 32, overall: 73 },
+  { name: 'Alex Arce', number: 24, position: 'ST', age: 30, overall: 73 },
+  { name: 'Isidro Pitta', number: 25, position: 'ST', age: 25, overall: 72 },
+  { name: 'Gustavo Caballero', number: 26, position: 'ST', age: 24, overall: 72 },
+]

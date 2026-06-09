@@ -1,0 +1,86 @@
+@import 'tailwindcss';
+
+/* ── FM-style dark theme tokens ───────────────────────────────── */
+@theme {
+  --color-pitch-950: #06140d;
+  --color-pitch-900: #0a1f15;
+  --color-navy-950: #070b14;
+  --color-navy-900: #0c1322;
+  --color-navy-800: #131c30;
+  --color-navy-700: #1c2840;
+  --color-navy-600: #28364f;
+  --color-steel-400: #6b7a93;
+  --color-steel-300: #95a3bb;
+  --color-accent-500: #18d96b;
+  --color-accent-400: #2ee87f;
+  --color-accent-600: #12b257;
+  --color-warn-500: #f2c14e;
+  --color-danger-500: #ef5d5d;
+
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: radial-gradient(circle at 50% -10%, #14213a 0%, var(--color-navy-950) 55%);
+  color: #e7ecf4;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* thin scrollbars for panels */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-navy-600);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* reusable UI primitives */
+@layer components {
+  .panel {
+    @apply rounded-xl border border-navy-700 bg-navy-900/80 backdrop-blur;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
+           transition-colors disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
+           transition-colors disabled:cursor-not-allowed disabled:opacity-40
+           bg-accent-500 text-navy-950 hover:bg-accent-400;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
+           transition-colors disabled:cursor-not-allowed disabled:opacity-40
+           border border-navy-600 text-steel-300 hover:bg-navy-800 hover:text-white;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-md bg-navy-800 px-2 py-0.5 text-xs font-medium text-steel-300;
+  }
+}

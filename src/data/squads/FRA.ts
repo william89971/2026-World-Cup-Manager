@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// France — 2026 World Cup squad
+export const FRA: RawSquad = [
+  { name: 'Mike Maignan', number: 1, position: 'GK', age: 30, overall: 86 },
+  { name: 'Brice Samba', number: 16, position: 'GK', age: 32, overall: 79 },
+  { name: 'Robin Risser', number: 23, position: 'GK', age: 22, overall: 72 },
+  { name: 'Jules Koundé', number: 5, position: 'RB', age: 27, overall: 85 },
+  { name: 'Malo Gusto', number: 22, position: 'RB', age: 23, overall: 79 },
+  { name: 'William Saliba', number: 17, position: 'CB', age: 25, overall: 87 },
+  { name: 'Dayot Upamecano', number: 4, position: 'CB', age: 27, overall: 84 },
+  { name: 'Ibrahima Konaté', number: 13, position: 'CB', age: 27, overall: 84 },
+  { name: 'Maxence Lacroix', number: 2, position: 'CB', age: 26, overall: 78 },
+  { name: 'Théo Hernández', number: 6, position: 'LB', age: 28, overall: 83 },
+  { name: 'Lucas Hernández', number: 21, position: 'LB', age: 30, overall: 80 },
+  { name: 'Lucas Digne', number: 3, position: 'LB', age: 32, overall: 78 },
+  { name: 'Aurélien Tchouaméni', number: 8, position: 'CDM', age: 26, overall: 85 },
+  { name: 'N\'Golo Kanté', number: 7, position: 'CDM', age: 35, overall: 82 },
+  { name: 'Manu Koné', number: 18, position: 'CM', age: 25, overall: 81 },
+  { name: 'Warren Zaïre-Emery', number: 15, position: 'CM', age: 20, overall: 80 },
+  { name: 'Adrien Rabiot', number: 14, position: 'CM', age: 31, overall: 83 },
+  { name: 'Rayan Cherki', number: 19, position: 'CAM', age: 22, overall: 81 },
+  { name: 'Maghnes Akliouche', number: 24, position: 'CAM', age: 24, overall: 78 },
+  { name: 'Kylian Mbappé', number: 10, position: 'ST', age: 27, overall: 91, star: true },
+  { name: 'Ousmane Dembélé', number: 11, position: 'RW', age: 28, overall: 89, star: true },
+  { name: 'Michael Olise', number: 9, position: 'RW', age: 24, overall: 85 },
+  { name: 'Bradley Barcola', number: 20, position: 'LW', age: 23, overall: 82 },
+  { name: 'Désiré Doué', number: 12, position: 'LW', age: 21, overall: 82 },
+  { name: 'Marcus Thuram', number: 26, position: 'ST', age: 28, overall: 83 },
+  { name: 'Jean-Philippe Mateta', number: 25, position: 'ST', age: 28, overall: 80 },
+]

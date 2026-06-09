@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Jordan — 2026 World Cup squad
+export const JOR: RawSquad = [
+  { name: 'Yazeed Abulaila', number: 1, position: 'GK', age: 31, overall: 72 },
+  { name: 'Abdullah Al-Fakhouri', number: 22, position: 'GK', age: 28, overall: 69 },
+  { name: 'Noor Bani Attiah', number: 12, position: 'GK', age: 27, overall: 68 },
+  { name: 'Ihsan Haddad', number: 5, position: 'CB', age: 32, overall: 73 },
+  { name: 'Yazan Al-Arab', number: 4, position: 'CB', age: 28, overall: 73 },
+  { name: 'Abdallah Nasib', number: 3, position: 'CB', age: 27, overall: 71 },
+  { name: 'Mohammad Abu Hashish', number: 15, position: 'CB', age: 26, overall: 70 },
+  { name: 'Mohammad Abualnadi', number: 6, position: 'RB', age: 30, overall: 71 },
+  { name: 'Saed Al-Rosan', number: 2, position: 'RB', age: 27, overall: 70 },
+  { name: 'Salim Obaid', number: 13, position: 'LB', age: 27, overall: 70 },
+  { name: 'Husam Abu Dahab', number: 14, position: 'LB', age: 25, overall: 69 },
+  { name: 'Mohannad Abu Taha', number: 23, position: 'CB', age: 26, overall: 68 },
+  { name: 'Noor Al-Rawabdeh', number: 8, position: 'CM', age: 26, overall: 73 },
+  { name: 'Nizar Al-Rashdan', number: 26, position: 'CM', age: 27, overall: 72 },
+  { name: 'Rajaei Ayed', number: 7, position: 'CM', age: 28, overall: 71 },
+  { name: 'Amer Jamous', number: 16, position: 'CDM', age: 24, overall: 70 },
+  { name: 'Ibrahim Sa\'deh', number: 17, position: 'CAM', age: 25, overall: 70 },
+  { name: 'Mahmoud Al-Mardi', number: 18, position: 'CM', age: 30, overall: 70 },
+  { name: 'Mohammad Al-Dawoud', number: 20, position: 'CDM', age: 24, overall: 69 },
+  { name: 'Musa Al-Tamari', number: 10, position: 'RW', age: 29, overall: 78, star: true },
+  { name: 'Ali Olwan', number: 9, position: 'ST', age: 27, overall: 73 },
+  { name: 'Odeh Al-Fakhouri', number: 11, position: 'LW', age: 25, overall: 72 },
+  { name: 'Mohammad Abu Zrayq', number: 19, position: 'ST', age: 28, overall: 71 },
+  { name: 'Ali Azaizeh', number: 21, position: 'RW', age: 24, overall: 71 },
+  { name: 'Ibrahim Sabra', number: 24, position: 'LW', age: 23, overall: 70 },
+  { name: 'Anas Badawi', number: 25, position: 'CB', age: 26, overall: 68 },
+]

@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Ghana — 2026 World Cup squad
+export const GHA: RawSquad = [
+  { name: 'Lawrence Ati-Zigi', number: 1, position: 'GK', age: 29, overall: 76 },
+  { name: 'Joseph Anang', number: 12, position: 'GK', age: 25, overall: 71 },
+  { name: 'Benjamin Asare', number: 16, position: 'GK', age: 30, overall: 70 },
+  { name: 'Alidu Seidu', number: 2, position: 'RB', age: 26, overall: 75 },
+  { name: 'Caleb Yirenkyi', number: 3, position: 'CB', age: 20, overall: 72 },
+  { name: 'Jonas Adjetey', number: 4, position: 'CB', age: 22, overall: 74 },
+  { name: 'Abdul Mumin', number: 6, position: 'CB', age: 28, overall: 76 },
+  { name: 'Gideon Mensah', number: 14, position: 'LB', age: 28, overall: 74 },
+  { name: 'Baba Rahman', number: 17, position: 'LB', age: 32, overall: 73 },
+  { name: 'Jerome Opoku', number: 18, position: 'CB', age: 27, overall: 73 },
+  { name: 'Derrick Luckassen', number: 23, position: 'CB', age: 30, overall: 73 },
+  { name: 'Marvin Senaya', number: 26, position: 'RB', age: 23, overall: 71 },
+  { name: 'Thomas Partey', number: 5, position: 'CDM', age: 32, overall: 81, star: true },
+  { name: 'Kwasi Sibo', number: 8, position: 'CDM', age: 26, overall: 73 },
+  { name: 'Elisha Owusu', number: 15, position: 'CM', age: 28, overall: 74 },
+  { name: 'Kojo Oppong Peprah', number: 21, position: 'CM', age: 22, overall: 71 },
+  { name: 'Fatawu Issahaku', number: 7, position: 'RW', age: 22, overall: 78 },
+  { name: 'Antoine Semenyo', number: 11, position: 'RW', age: 26, overall: 82, star: true },
+  { name: 'Christopher Bonsu Baah', number: 13, position: 'RW', age: 22, overall: 74 },
+  { name: 'Augustine Boakye', number: 20, position: 'RW', age: 25, overall: 73 },
+  { name: 'Kamaldeen Sulemana', number: 22, position: 'LW', age: 24, overall: 78 },
+  { name: 'Ernest Nuamah', number: 24, position: 'LW', age: 22, overall: 77 },
+  { name: 'Jordan Ayew', number: 9, position: 'ST', age: 34, overall: 77, star: true },
+  { name: 'Brandon Thomas-Asante', number: 10, position: 'ST', age: 27, overall: 74 },
+  { name: 'Iñaki Williams', number: 19, position: 'ST', age: 31, overall: 78 },
+  { name: 'Prince Kwabena Adu', number: 25, position: 'ST', age: 24, overall: 71 },
+]

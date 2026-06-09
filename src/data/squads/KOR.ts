@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// South Korea — 2026 World Cup squad
+export const KOR: RawSquad = [
+  { name: 'Kim Seung-gyu', number: 1, position: 'GK', age: 35, overall: 76 },
+  { name: 'Lee Han-beom', number: 2, position: 'CB', age: 23, overall: 73 },
+  { name: 'Lee Gi-hyuk', number: 3, position: 'CM', age: 25, overall: 71 },
+  { name: 'Kim Min-jae', number: 4, position: 'CB', age: 29, overall: 84, star: true },
+  { name: 'Kim Tae-hyeon', number: 5, position: 'CB', age: 25, overall: 73 },
+  { name: 'Hwang In-beom', number: 6, position: 'CM', age: 29, overall: 79 },
+  { name: 'Son Heung-min', number: 7, position: 'LW', age: 33, overall: 85, star: true },
+  { name: 'Paik Seung-ho', number: 8, position: 'CM', age: 29, overall: 75 },
+  { name: 'Cho Gue-sung', number: 9, position: 'ST', age: 28, overall: 76 },
+  { name: 'Lee Jae-sung', number: 10, position: 'CAM', age: 33, overall: 77 },
+  { name: 'Hwang Hee-chan', number: 11, position: 'RW', age: 30, overall: 78 },
+  { name: 'Song Bum-keun', number: 12, position: 'GK', age: 28, overall: 73 },
+  { name: 'Lee Tae-seok', number: 13, position: 'RB', age: 23, overall: 71 },
+  { name: 'Cho Wi-je', number: 14, position: 'CB', age: 24, overall: 71 },
+  { name: 'Kim Moon-hwan', number: 15, position: 'RB', age: 30, overall: 73 },
+  { name: 'Park Jin-seob', number: 16, position: 'LB', age: 30, overall: 72 },
+  { name: 'Bae Jun-ho', number: 17, position: 'CAM', age: 22, overall: 75 },
+  { name: 'Oh Hyeon-gyu', number: 18, position: 'ST', age: 25, overall: 74 },
+  { name: 'Lee Kang-in', number: 19, position: 'CAM', age: 25, overall: 81, star: true },
+  { name: 'Yang Hyun-jun', number: 20, position: 'RW', age: 24, overall: 73 },
+  { name: 'Jo Hyeon-woo', number: 21, position: 'GK', age: 34, overall: 75 },
+  { name: 'Seol Young-woo', number: 22, position: 'RB', age: 27, overall: 73 },
+  { name: 'Jens Castrop', number: 23, position: 'CM', age: 22, overall: 74 },
+  { name: 'Kim Jin-gyu', number: 24, position: 'CB', age: 29, overall: 72 },
+  { name: 'Eom Ji-sung', number: 25, position: 'LM', age: 24, overall: 72 },
+  { name: 'Lee Dong-gyeong', number: 26, position: 'CAM', age: 28, overall: 73 },
+]

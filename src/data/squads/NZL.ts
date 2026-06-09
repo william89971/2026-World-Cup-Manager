@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// New Zealand — 2026 World Cup squad
+export const NZL: RawSquad = [
+  { name: 'Max Crocombe', number: 1, position: 'GK', age: 32, overall: 73 },
+  { name: 'Alex Paulsen', number: 12, position: 'GK', age: 24, overall: 73 },
+  { name: 'Michael Woud', number: 23, position: 'GK', age: 27, overall: 70 },
+  { name: 'Tim Payne', number: 2, position: 'RB', age: 32, overall: 72 },
+  { name: 'Tommy Smith', number: 3, position: 'CB', age: 36, overall: 71 },
+  { name: 'Michael Boxall', number: 5, position: 'CB', age: 37, overall: 73 },
+  { name: 'Tyler Bindon', number: 4, position: 'CB', age: 21, overall: 75 },
+  { name: 'Nando Pijnaker', number: 26, position: 'CB', age: 27, overall: 73 },
+  { name: 'Liberato Cacace', number: 16, position: 'LB', age: 25, overall: 76 },
+  { name: 'Francis de Vries', number: 14, position: 'LB', age: 28, overall: 71 },
+  { name: 'Finn Surman', number: 19, position: 'CB', age: 22, overall: 72 },
+  { name: 'Callan Elliot', number: 22, position: 'RB', age: 25, overall: 70 },
+  { name: 'Joe Bell', number: 8, position: 'CM', age: 26, overall: 74 },
+  { name: 'Matt Garbett', number: 17, position: 'CM', age: 24, overall: 73 },
+  { name: 'Marko Stamenic', number: 13, position: 'CM', age: 24, overall: 74 },
+  { name: 'Alex Rufer', number: 6, position: 'CDM', age: 29, overall: 71 },
+  { name: 'Sarpreet Singh', number: 7, position: 'CAM', age: 27, overall: 73 },
+  { name: 'Ryan Thomas', number: 20, position: 'CM', age: 31, overall: 73 },
+  { name: 'Chris Wood', number: 9, position: 'ST', age: 34, overall: 80, star: true },
+  { name: 'Ben Old', number: 11, position: 'RW', age: 23, overall: 73 },
+  { name: 'Kosta Barbarouses', number: 10, position: 'LW', age: 36, overall: 71 },
+  { name: 'Ben Waine', number: 18, position: 'ST', age: 25, overall: 71 },
+  { name: 'Callum McCowatt', number: 21, position: 'LW', age: 26, overall: 70 },
+  { name: 'Eli Just', number: 15, position: 'RW', age: 25, overall: 71 },
+  { name: 'Jesse Randall', number: 24, position: 'ST', age: 24, overall: 70 },
+  { name: 'Lachlan Bayliss', number: 25, position: 'CM', age: 22, overall: 69 },
+]

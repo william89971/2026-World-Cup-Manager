@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Panama — 2026 World Cup squad
+export const PAN: RawSquad = [
+  { name: 'Orlando Mosquera', number: 1, position: 'GK', age: 31, overall: 74 },
+  { name: 'Luis Mejía', number: 22, position: 'GK', age: 34, overall: 73 },
+  { name: 'César Samudio', number: 12, position: 'GK', age: 32, overall: 71 },
+  { name: 'César Blackman', number: 2, position: 'RB', age: 28, overall: 73 },
+  { name: 'Jorge Gutiérrez', number: 3, position: 'CB', age: 26, overall: 72 },
+  { name: 'Michael Amir Murillo', number: 4, position: 'RB', age: 30, overall: 77 },
+  { name: 'Fidel Escobar', number: 5, position: 'CB', age: 30, overall: 73 },
+  { name: 'Andrés Andrade', number: 6, position: 'CB', age: 28, overall: 74 },
+  { name: 'Edgardo Fariña', number: 13, position: 'CB', age: 25, overall: 71 },
+  { name: 'José Córdoba', number: 15, position: 'CB', age: 25, overall: 76 },
+  { name: 'Éric Davis', number: 14, position: 'LB', age: 35, overall: 73 },
+  { name: 'Jiovany Ramos', number: 23, position: 'CB', age: 27, overall: 70 },
+  { name: 'Roderick Miller', number: 18, position: 'CB', age: 33, overall: 71 },
+  { name: 'Aníbal Godoy', number: 20, position: 'CDM', age: 36, overall: 76, star: true },
+  { name: 'Adalberto Carrasquilla', number: 10, position: 'CM', age: 27, overall: 78, star: true },
+  { name: 'Carlos Harvey', number: 8, position: 'CDM', age: 26, overall: 74 },
+  { name: 'Cristian Martínez', number: 17, position: 'CM', age: 28, overall: 72 },
+  { name: 'José Luis Rodríguez', number: 7, position: 'RW', age: 27, overall: 74 },
+  { name: 'César Yanis', number: 16, position: 'CM', age: 28, overall: 71 },
+  { name: 'Yoel Bárcenas', number: 21, position: 'LW', age: 32, overall: 74 },
+  { name: 'Alberto Quintero', number: 11, position: 'RW', age: 38, overall: 71 },
+  { name: 'Azarías Londoño', number: 24, position: 'LW', age: 27, overall: 71 },
+  { name: 'Ismael Díaz', number: 19, position: 'ST', age: 29, overall: 76 },
+  { name: 'Cecilio Waterman', number: 9, position: 'ST', age: 34, overall: 74 },
+  { name: 'José Fajardo', number: 25, position: 'ST', age: 30, overall: 73 },
+  { name: 'Tomás Rodríguez', number: 26, position: 'ST', age: 24, overall: 70 },
+]

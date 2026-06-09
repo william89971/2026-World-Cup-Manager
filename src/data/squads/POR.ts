@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Portugal — 2026 World Cup squad
+export const POR: RawSquad = [
+  { name: 'Diogo Costa', number: 1, position: 'GK', age: 26, overall: 85 },
+  { name: 'José Sá', number: 12, position: 'GK', age: 33, overall: 79 },
+  { name: 'Rui Silva', number: 22, position: 'GK', age: 32, overall: 78 },
+  { name: 'Nélson Semedo', number: 2, position: 'RB', age: 32, overall: 80 },
+  { name: 'Rúben Dias', number: 3, position: 'CB', age: 29, overall: 88, star: true },
+  { name: 'Tomás Araújo', number: 4, position: 'CB', age: 24, overall: 78 },
+  { name: 'Diogo Dalot', number: 5, position: 'RB', age: 27, overall: 82 },
+  { name: 'Matheus Nunes', number: 6, position: 'CM', age: 27, overall: 80 },
+  { name: 'Gonçalo Inácio', number: 14, position: 'CB', age: 24, overall: 82 },
+  { name: 'João Cancelo', number: 20, position: 'LB', age: 31, overall: 83 },
+  { name: 'Nuno Mendes', number: 25, position: 'LB', age: 23, overall: 86 },
+  { name: 'Bruno Fernandes', number: 8, position: 'CAM', age: 31, overall: 87, star: true },
+  { name: 'Bernardo Silva', number: 10, position: 'CM', age: 31, overall: 86 },
+  { name: 'Renato Veiga', number: 13, position: 'CB', age: 22, overall: 78 },
+  { name: 'João Neves', number: 15, position: 'CM', age: 21, overall: 85 },
+  { name: 'Rúben Neves', number: 21, position: 'CDM', age: 29, overall: 81 },
+  { name: 'Vitinha', number: 23, position: 'CM', age: 26, overall: 86 },
+  { name: 'Samu Costa', number: 24, position: 'CDM', age: 25, overall: 77 },
+  { name: 'Cristiano Ronaldo', number: 7, position: 'ST', age: 41, overall: 82, star: true },
+  { name: 'Gonçalo Ramos', number: 9, position: 'ST', age: 24, overall: 82 },
+  { name: 'João Félix', number: 11, position: 'CF', age: 26, overall: 80 },
+  { name: 'Francisco Trincão', number: 16, position: 'RW', age: 26, overall: 80 },
+  { name: 'Rafael Leão', number: 17, position: 'LW', age: 26, overall: 85 },
+  { name: 'Pedro Neto', number: 18, position: 'RW', age: 26, overall: 82 },
+  { name: 'Gonçalo Guedes', number: 19, position: 'LW', age: 29, overall: 78 },
+  { name: 'Francisco Conceição', number: 26, position: 'RW', age: 23, overall: 80 },
+]

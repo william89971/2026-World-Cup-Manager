@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Canada — 2026 World Cup squad
+export const CAN: RawSquad = [
+  { name: 'Dayne St. Clair', number: 1, position: 'GK', age: 29, overall: 77 },
+  { name: 'Alistair Johnston', number: 2, position: 'RB', age: 27, overall: 79 },
+  { name: 'Alfie Jones', number: 3, position: 'CB', age: 28, overall: 73 },
+  { name: 'Luc de Fougerolles', number: 4, position: 'CB', age: 20, overall: 71 },
+  { name: 'Joel Waterman', number: 5, position: 'CB', age: 30, overall: 73 },
+  { name: 'Mathieu Choinière', number: 6, position: 'CM', age: 27, overall: 74 },
+  { name: 'Stephen Eustáquio', number: 7, position: 'CM', age: 29, overall: 79 },
+  { name: 'Ismaël Koné', number: 8, position: 'CM', age: 23, overall: 76 },
+  { name: 'Cyle Larin', number: 9, position: 'ST', age: 31, overall: 77 },
+  { name: 'Jonathan David', number: 10, position: 'ST', age: 26, overall: 83, star: true },
+  { name: 'Liam Millar', number: 11, position: 'LM', age: 26, overall: 74 },
+  { name: 'Tani Oluwaseyi', number: 12, position: 'ST', age: 26, overall: 74 },
+  { name: 'Derek Cornelius', number: 13, position: 'CB', age: 28, overall: 76 },
+  { name: 'Jacob Shaffelburg', number: 14, position: 'LW', age: 26, overall: 74 },
+  { name: 'Moïse Bombito', number: 15, position: 'CB', age: 26, overall: 78 },
+  { name: 'Maxime Crépeau', number: 16, position: 'GK', age: 32, overall: 75 },
+  { name: 'Tajon Buchanan', number: 17, position: 'RW', age: 27, overall: 78, star: true },
+  { name: 'Owen Goodman', number: 18, position: 'GK', age: 22, overall: 70 },
+  { name: 'Alphonso Davies', number: 19, position: 'LB', age: 25, overall: 85, star: true },
+  { name: 'Ali Ahmed', number: 20, position: 'RM', age: 25, overall: 73 },
+  { name: 'Jonathan Osorio', number: 21, position: 'CAM', age: 33, overall: 73 },
+  { name: 'Richie Laryea', number: 22, position: 'RB', age: 31, overall: 73 },
+  { name: 'Niko Sigur', number: 23, position: 'RB', age: 22, overall: 73 },
+  { name: 'Promise David', number: 24, position: 'ST', age: 24, overall: 75 },
+  { name: 'Nathan Saliba', number: 25, position: 'CM', age: 22, overall: 72 },
+  { name: 'Marcelo Flores', number: 26, position: 'CAM', age: 22, overall: 72 },
+]

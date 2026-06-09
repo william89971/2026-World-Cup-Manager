@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Bosnia and Herzegovina — 2026 World Cup squad
+export const BIH: RawSquad = [
+  { name: 'Nikola Vasilj', number: 1, position: 'GK', age: 30, overall: 76 },
+  { name: 'Nihad Mujakić', number: 2, position: 'CB', age: 28, overall: 73 },
+  { name: 'Dennis Hadžikadunić', number: 3, position: 'CB', age: 27, overall: 74 },
+  { name: 'Tarik Muharemović', number: 4, position: 'CB', age: 23, overall: 75 },
+  { name: 'Sead Kolašinac', number: 5, position: 'LB', age: 32, overall: 78, star: true },
+  { name: 'Benjamin Tahirović', number: 6, position: 'CM', age: 23, overall: 74 },
+  { name: 'Amar Dedić', number: 7, position: 'RB', age: 23, overall: 78 },
+  { name: 'Armin Gigović', number: 8, position: 'CM', age: 24, overall: 74 },
+  { name: 'Samed Baždar', number: 9, position: 'ST', age: 22, overall: 73 },
+  { name: 'Ermedin Demirović', number: 10, position: 'ST', age: 28, overall: 78 },
+  { name: 'Edin Džeko', number: 11, position: 'ST', age: 40, overall: 77, star: true },
+  { name: 'Mladen Jurkas', number: 12, position: 'GK', age: 18, overall: 68 },
+  { name: 'Ivan Bašić', number: 13, position: 'CM', age: 24, overall: 71 },
+  { name: 'Ivan Šunjić', number: 14, position: 'CDM', age: 29, overall: 74 },
+  { name: 'Amar Memić', number: 15, position: 'CM', age: 25, overall: 71 },
+  { name: 'Amir Hadžiahmetović', number: 16, position: 'CDM', age: 29, overall: 75 },
+  { name: 'Dženis Burnić', number: 17, position: 'CM', age: 28, overall: 72 },
+  { name: 'Nikola Katić', number: 18, position: 'CB', age: 29, overall: 75 },
+  { name: 'Kerim Alajbegović', number: 19, position: 'LW', age: 18, overall: 72 },
+  { name: 'Esmir Bajraktarević', number: 20, position: 'RW', age: 21, overall: 75 },
+  { name: 'Stjepan Radeljić', number: 21, position: 'CB', age: 28, overall: 72 },
+  { name: 'Martin Zlomislić', number: 22, position: 'GK', age: 27, overall: 70 },
+  { name: 'Haris Tabaković', number: 23, position: 'ST', age: 31, overall: 74 },
+  { name: 'Nidal Čelik', number: 24, position: 'CB', age: 19, overall: 71 },
+  { name: 'Jovo Lukić', number: 25, position: 'ST', age: 27, overall: 70 },
+  { name: 'Ermin Mahmić', number: 26, position: 'CM', age: 21, overall: 70 },
+]

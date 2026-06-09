@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Ivory Coast — 2026 World Cup squad
+export const CIV: RawSquad = [
+  { name: 'Yahia Fofana', number: 1, position: 'GK', age: 25, overall: 76 },
+  { name: 'Alban Lafont', number: 16, position: 'GK', age: 27, overall: 76 },
+  { name: 'Mohamed Koné', number: 23, position: 'GK', age: 25, overall: 71 },
+  { name: 'Ousmane Diomandé', number: 4, position: 'CB', age: 22, overall: 81 },
+  { name: 'Evan Ndicka', number: 3, position: 'CB', age: 26, overall: 81 },
+  { name: 'Odilon Kossounou', number: 5, position: 'CB', age: 25, overall: 79 },
+  { name: 'Wilfried Singo', number: 17, position: 'RB', age: 25, overall: 80 },
+  { name: 'Emmanuel Agbadou', number: 2, position: 'CB', age: 28, overall: 77 },
+  { name: 'Guéla Doué', number: 22, position: 'RB', age: 23, overall: 76 },
+  { name: 'Ghislain Konan', number: 6, position: 'LB', age: 30, overall: 74 },
+  { name: 'Clément Akpa', number: 12, position: 'LB', age: 24, overall: 72 },
+  { name: 'Franck Kessié', number: 8, position: 'CM', age: 29, overall: 82, star: true },
+  { name: 'Ibrahim Sangaré', number: 19, position: 'CDM', age: 28, overall: 79 },
+  { name: 'Seko Fofana', number: 15, position: 'CM', age: 31, overall: 78 },
+  { name: 'Jean-Michaël Seri', number: 10, position: 'CM', age: 34, overall: 74 },
+  { name: 'Christ Inao Oulaï', number: 18, position: 'CDM', age: 19, overall: 73 },
+  { name: 'Parfait Guiagon', number: 20, position: 'CM', age: 22, overall: 71 },
+  { name: 'Amad Diallo', number: 7, position: 'RW', age: 23, overall: 81, star: true },
+  { name: 'Simon Adingra', number: 11, position: 'LW', age: 24, overall: 79 },
+  { name: 'Evann Guessand', number: 9, position: 'ST', age: 24, overall: 78 },
+  { name: 'Ange-Yoan Bonny', number: 21, position: 'ST', age: 22, overall: 77 },
+  { name: 'Nicolas Pépé', number: 14, position: 'RM', age: 30, overall: 76 },
+  { name: 'Elye Wahi', number: 13, position: 'ST', age: 23, overall: 76 },
+  { name: 'Yan Diomandé', number: 24, position: 'LM', age: 19, overall: 74 },
+  { name: 'Oumar Diakité', number: 25, position: 'ST', age: 22, overall: 73 },
+  { name: 'Bazoumana Touré', number: 26, position: 'RW', age: 21, overall: 72 },
+]

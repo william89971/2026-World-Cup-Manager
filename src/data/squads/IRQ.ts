@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Iraq — 2026 World Cup squad
+export const IRQ: RawSquad = [
+  { name: 'Jalal Hassan', number: 1, position: 'GK', age: 33, overall: 72 },
+  { name: 'Fahad Talib', number: 22, position: 'GK', age: 31, overall: 70 },
+  { name: 'Ahmed Basil', number: 12, position: 'GK', age: 25, overall: 68 },
+  { name: 'Merchas Doski', number: 4, position: 'CB', age: 26, overall: 73 },
+  { name: 'Rebin Sulaka', number: 5, position: 'CB', age: 28, overall: 71 },
+  { name: 'Akam Hashem', number: 3, position: 'CB', age: 27, overall: 70 },
+  { name: 'Frans Putros', number: 15, position: 'CB', age: 32, overall: 70 },
+  { name: 'Hussein Ali', number: 2, position: 'RB', age: 25, overall: 72 },
+  { name: 'Ahmed Yahya', number: 13, position: 'RB', age: 30, overall: 69 },
+  { name: 'Mustafa Saadoon', number: 14, position: 'LB', age: 24, overall: 70 },
+  { name: 'Zaid Tahseen', number: 6, position: 'CB', age: 27, overall: 70 },
+  { name: 'Zaid Ismail', number: 23, position: 'LB', age: 24, overall: 68 },
+  { name: 'Amir Al-Ammari', number: 8, position: 'CM', age: 28, overall: 74 },
+  { name: 'Zidane Iqbal', number: 18, position: 'CM', age: 23, overall: 73 },
+  { name: 'Ahmed Qasem', number: 7, position: 'RW', age: 22, overall: 73 },
+  { name: 'Aimar Sher', number: 16, position: 'CM', age: 24, overall: 71 },
+  { name: 'Kevin Yakob', number: 17, position: 'CAM', age: 25, overall: 71 },
+  { name: 'Ibrahim Bayesh', number: 20, position: 'CM', age: 28, overall: 70 },
+  { name: 'Youssef Amyn', number: 11, position: 'LW', age: 23, overall: 71 },
+  { name: 'Marko Farji', number: 19, position: 'LW', age: 22, overall: 70 },
+  { name: 'Aymen Hussein', number: 9, position: 'ST', age: 30, overall: 73 },
+  { name: 'Ali Al-Hamadi', number: 10, position: 'ST', age: 24, overall: 73, star: true },
+  { name: 'Mohanad Ali', number: 21, position: 'ST', age: 26, overall: 72 },
+  { name: 'Ali Jassim', number: 24, position: 'CF', age: 23, overall: 70 },
+  { name: 'Ali Yousef', number: 25, position: 'RW', age: 24, overall: 69 },
+  { name: 'Manaf Younis', number: 26, position: 'CB', age: 26, overall: 68 },
+]

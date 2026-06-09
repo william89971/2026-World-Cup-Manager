@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Belgium — 2026 World Cup squad
+export const BEL: RawSquad = [
+  { name: 'Thibaut Courtois', number: 1, position: 'GK', age: 34, overall: 89, star: true },
+  { name: 'Zeno Debast', number: 2, position: 'CB', age: 22, overall: 79 },
+  { name: 'Arthur Theate', number: 3, position: 'CB', age: 26, overall: 80 },
+  { name: 'Brandon Mechele', number: 4, position: 'CB', age: 33, overall: 75 },
+  { name: 'Maxim De Cuyper', number: 5, position: 'LB', age: 25, overall: 79 },
+  { name: 'Axel Witsel', number: 6, position: 'CDM', age: 37, overall: 78 },
+  { name: 'Kevin De Bruyne', number: 7, position: 'CAM', age: 34, overall: 88, star: true },
+  { name: 'Youri Tielemans', number: 8, position: 'CM', age: 29, overall: 83 },
+  { name: 'Romelu Lukaku', number: 9, position: 'ST', age: 33, overall: 84, star: true },
+  { name: 'Leandro Trossard', number: 10, position: 'LW', age: 31, overall: 83 },
+  { name: 'Jérémy Doku', number: 11, position: 'RW', age: 24, overall: 84 },
+  { name: 'Senne Lammens', number: 12, position: 'GK', age: 23, overall: 78 },
+  { name: 'Mike Penders', number: 13, position: 'GK', age: 20, overall: 74 },
+  { name: 'Dodi Lukebakio', number: 14, position: 'RW', age: 28, overall: 80 },
+  { name: 'Thomas Meunier', number: 15, position: 'RB', age: 34, overall: 77 },
+  { name: 'Koni De Winter', number: 16, position: 'CB', age: 24, overall: 80 },
+  { name: 'Charles De Ketelaere', number: 17, position: 'CAM', age: 25, overall: 82 },
+  { name: 'Joaquín Seys', number: 18, position: 'RB', age: 20, overall: 73 },
+  { name: 'Diego Moreira', number: 19, position: 'LW', age: 21, overall: 74 },
+  { name: 'Hans Vanaken', number: 20, position: 'CM', age: 33, overall: 78 },
+  { name: 'Timothy Castagne', number: 21, position: 'RB', age: 30, overall: 80 },
+  { name: 'Alexis Saelemaekers', number: 22, position: 'RM', age: 26, overall: 80 },
+  { name: 'Nicolas Raskin', number: 23, position: 'CM', age: 25, overall: 78 },
+  { name: 'Amadou Onana', number: 24, position: 'CDM', age: 24, overall: 83 },
+  { name: 'Nathan Ngoy', number: 25, position: 'CB', age: 23, overall: 74 },
+  { name: 'Matías Fernández-Pardo', number: 26, position: 'LW', age: 20, overall: 73 },
+]

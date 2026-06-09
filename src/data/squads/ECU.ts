@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Ecuador — 2026 World Cup squad
+export const ECU: RawSquad = [
+  { name: 'Hernán Galíndez', number: 1, position: 'GK', age: 39, overall: 76 },
+  { name: 'Moisés Ramírez', number: 12, position: 'GK', age: 30, overall: 76 },
+  { name: 'Gonzalo Valle', number: 23, position: 'GK', age: 25, overall: 73 },
+  { name: 'Willian Pacho', number: 3, position: 'CB', age: 24, overall: 85, star: true },
+  { name: 'Piero Hincapié', number: 4, position: 'CB', age: 24, overall: 83 },
+  { name: 'Joel Ordóñez', number: 2, position: 'CB', age: 21, overall: 78 },
+  { name: 'Félix Torres', number: 5, position: 'CB', age: 29, overall: 76 },
+  { name: 'Pervis Estupiñán', number: 7, position: 'LB', age: 28, overall: 81 },
+  { name: 'Ángelo Preciado', number: 17, position: 'RB', age: 28, overall: 77 },
+  { name: 'Yaimar Medina', number: 6, position: 'LB', age: 22, overall: 73 },
+  { name: 'Jackson Porozo', number: 21, position: 'CB', age: 25, overall: 73 },
+  { name: 'Moisés Caicedo', number: 8, position: 'CDM', age: 24, overall: 87, star: true },
+  { name: 'Alan Franco', number: 26, position: 'CDM', age: 27, overall: 76 },
+  { name: 'Pedro Vite', number: 14, position: 'CM', age: 24, overall: 75 },
+  { name: 'Jordy Alcívar', number: 18, position: 'CM', age: 25, overall: 73 },
+  { name: 'Denil Castillo', number: 20, position: 'CDM', age: 23, overall: 73 },
+  { name: 'Kendry Páez', number: 10, position: 'CAM', age: 18, overall: 78 },
+  { name: 'Gonzalo Plata', number: 19, position: 'RW', age: 25, overall: 79 },
+  { name: 'Nilson Angulo', number: 16, position: 'LM', age: 22, overall: 75 },
+  { name: 'John Yeboah', number: 11, position: 'RM', age: 25, overall: 74 },
+  { name: 'Alan Minda', number: 15, position: 'LM', age: 22, overall: 72 },
+  { name: 'Enner Valencia', number: 13, position: 'ST', age: 36, overall: 76, star: true },
+  { name: 'Kevin Rodríguez', number: 9, position: 'ST', age: 25, overall: 75 },
+  { name: 'Anthony Valencia', number: 22, position: 'RW', age: 21, overall: 73 },
+  { name: 'Jeremy Arévalo', number: 24, position: 'ST', age: 20, overall: 73 },
+  { name: 'Jordy Caicedo', number: 25, position: 'ST', age: 28, overall: 71 },
+]

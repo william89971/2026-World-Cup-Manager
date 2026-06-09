@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Argentina — 2026 World Cup squad
+export const ARG: RawSquad = [
+  { name: 'Emiliano Martínez', number: 23, position: 'GK', age: 33, overall: 86 },
+  { name: 'Gerónimo Rulli', number: 12, position: 'GK', age: 34, overall: 79 },
+  { name: 'Juan Musso', number: 1, position: 'GK', age: 32, overall: 77 },
+  { name: 'Nahuel Molina', number: 26, position: 'RB', age: 28, overall: 80 },
+  { name: 'Gonzalo Montiel', number: 4, position: 'RB', age: 29, overall: 78 },
+  { name: 'Cristian Romero', number: 13, position: 'CB', age: 28, overall: 86 },
+  { name: 'Lisandro Martínez', number: 25, position: 'CB', age: 28, overall: 84 },
+  { name: 'Nicolás Otamendi', number: 19, position: 'CB', age: 38, overall: 80 },
+  { name: 'Leonardo Balerdi', number: 2, position: 'CB', age: 27, overall: 79 },
+  { name: 'Nicolás Tagliafico', number: 3, position: 'LB', age: 33, overall: 80 },
+  { name: 'Facundo Medina', number: 6, position: 'LB', age: 27, overall: 78 },
+  { name: 'Rodrigo De Paul', number: 7, position: 'CM', age: 32, overall: 83 },
+  { name: 'Alexis Mac Allister', number: 20, position: 'CM', age: 27, overall: 86 },
+  { name: 'Enzo Fernández', number: 24, position: 'CM', age: 25, overall: 85 },
+  { name: 'Leandro Paredes', number: 5, position: 'CDM', age: 31, overall: 80 },
+  { name: 'Exequiel Palacios', number: 14, position: 'CM', age: 27, overall: 80 },
+  { name: 'Giovani Lo Celso', number: 18, position: 'CAM', age: 30, overall: 80 },
+  { name: 'Nico Paz', number: 16, position: 'CAM', age: 21, overall: 81 },
+  { name: 'Thiago Almada', number: 17, position: 'CAM', age: 25, overall: 80 },
+  { name: 'Valentín Barco', number: 8, position: 'LB', age: 21, overall: 75 },
+  { name: 'Lionel Messi', number: 10, position: 'RW', age: 38, overall: 88, star: true },
+  { name: 'Julián Álvarez', number: 9, position: 'ST', age: 26, overall: 87, star: true },
+  { name: 'Lautaro Martínez', number: 22, position: 'ST', age: 28, overall: 87, star: true },
+  { name: 'Nicolás González', number: 11, position: 'LW', age: 28, overall: 81 },
+  { name: 'Giuliano Simeone', number: 15, position: 'RW', age: 23, overall: 79 },
+  { name: 'José Manuel López', number: 21, position: 'ST', age: 25, overall: 76 },
+]

@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Tunisia — 2026 World Cup squad
+export const TUN: RawSquad = [
+  { name: 'Aymen Dahmen', number: 1, position: 'GK', age: 29, overall: 76 },
+  { name: 'Sabri Ben Hessen', number: 16, position: 'GK', age: 25, overall: 72 },
+  { name: 'Abdelmouhib Chamakh', number: 23, position: 'GK', age: 27, overall: 71 },
+  { name: 'Montassar Talbi', number: 3, position: 'CB', age: 27, overall: 77 },
+  { name: 'Dylan Bronn', number: 2, position: 'CB', age: 30, overall: 75 },
+  { name: 'Ali Abdi', number: 12, position: 'LB', age: 32, overall: 75 },
+  { name: 'Yan Valery', number: 21, position: 'RB', age: 27, overall: 74 },
+  { name: 'Omar Rekik', number: 5, position: 'CB', age: 24, overall: 73 },
+  { name: 'Mohamed Amine Ben Hamida', number: 6, position: 'LB', age: 25, overall: 72 },
+  { name: 'Raed Chikhaoui', number: 15, position: 'RB', age: 25, overall: 71 },
+  { name: 'Adam Arous', number: 20, position: 'CB', age: 23, overall: 71 },
+  { name: 'Moutaz Neffati', number: 13, position: 'CB', age: 24, overall: 70 },
+  { name: 'Ellyes Skhiri', number: 8, position: 'CDM', age: 31, overall: 80, star: true },
+  { name: 'Hannibal Mejbri', number: 10, position: 'CAM', age: 23, overall: 77 },
+  { name: 'Rani Khedira', number: 4, position: 'CDM', age: 32, overall: 75 },
+  { name: 'Anis Ben Slimane', number: 14, position: 'CM', age: 25, overall: 74 },
+  { name: 'Mortadha Ben Ouanes', number: 17, position: 'CM', age: 28, overall: 72 },
+  { name: 'Mohamed Hadj Mahmoud', number: 18, position: 'CM', age: 24, overall: 71 },
+  { name: 'Elias Achouri', number: 7, position: 'RW', age: 27, overall: 76 },
+  { name: 'Sébastien Tounekti', number: 11, position: 'LW', age: 24, overall: 75 },
+  { name: 'Ismaël Gharbi', number: 19, position: 'CAM', age: 22, overall: 74 },
+  { name: 'Elias Saad', number: 9, position: 'LW', age: 26, overall: 74 },
+  { name: 'Firas Chaouat', number: 22, position: 'ST', age: 28, overall: 71 },
+  { name: 'Khalil Ayari', number: 24, position: 'ST', age: 19, overall: 71 },
+  { name: 'Rayan Elloumi', number: 25, position: 'RW', age: 22, overall: 70 },
+  { name: 'Hazem Mastouri', number: 26, position: 'ST', age: 23, overall: 70 },
+]

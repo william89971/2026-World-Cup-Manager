@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Uzbekistan — 2026 World Cup squad
+export const UZB: RawSquad = [
+  { name: 'Utkir Yusupov', number: 1, position: 'GK', age: 29, overall: 73 },
+  { name: 'Abduvohid Nematov', number: 12, position: 'GK', age: 27, overall: 71 },
+  { name: 'Botirali Ergashev', number: 22, position: 'GK', age: 26, overall: 70 },
+  { name: 'Abdukodir Khusanov', number: 4, position: 'CB', age: 22, overall: 80, star: true },
+  { name: 'Rustam Ashurmatov', number: 5, position: 'CB', age: 30, overall: 73 },
+  { name: 'Farrukh Sayfiev', number: 2, position: 'RB', age: 28, overall: 71 },
+  { name: 'Khojiakbar Alijonov', number: 3, position: 'LB', age: 27, overall: 71 },
+  { name: 'Sherzod Nasrullaev', number: 13, position: 'CB', age: 27, overall: 70 },
+  { name: 'Umar Eshmurodov', number: 15, position: 'CB', age: 25, overall: 70 },
+  { name: 'Abdulla Abdullaev', number: 6, position: 'RB', age: 27, overall: 70 },
+  { name: 'Bekhruz Karimov', number: 16, position: 'LB', age: 24, overall: 69 },
+  { name: 'Jakhongir Urozov', number: 14, position: 'CB', age: 26, overall: 69 },
+  { name: 'Avazbek Ulmasaliev', number: 21, position: 'RB', age: 23, overall: 68 },
+  { name: 'Otabek Shukurov', number: 8, position: 'CDM', age: 29, overall: 74 },
+  { name: 'Jaloliddin Masharipov', number: 7, position: 'CAM', age: 32, overall: 75 },
+  { name: 'Odiljon Hamrobekov', number: 18, position: 'CDM', age: 30, overall: 72 },
+  { name: 'Oston Urunov', number: 11, position: 'LW', age: 25, overall: 72 },
+  { name: 'Jamshid Iskanderov', number: 20, position: 'CM', age: 32, overall: 71 },
+  { name: 'Dostonbek Khamdamov', number: 17, position: 'RW', age: 30, overall: 73 },
+  { name: 'Abbosbek Fayzullaev', number: 10, position: 'CAM', age: 22, overall: 77, star: true },
+  { name: 'Akmal Mozgovoy', number: 24, position: 'CM', age: 23, overall: 70 },
+  { name: 'Azizjon Ganiev', number: 19, position: 'CM', age: 27, overall: 70 },
+  { name: 'Sherzod Esanov', number: 25, position: 'CM', age: 24, overall: 68 },
+  { name: 'Eldor Shomurodov', number: 9, position: 'ST', age: 31, overall: 78, star: true },
+  { name: 'Igor Sergeev', number: 23, position: 'ST', age: 32, overall: 72 },
+  { name: 'Azizbek Amonov', number: 26, position: 'ST', age: 28, overall: 69 },
+]

@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// DR Congo — 2026 World Cup squad
+export const COD: RawSquad = [
+  { name: 'Lionel Mpasi', number: 1, position: 'GK', age: 31, overall: 74 },
+  { name: 'Timothy Fayulu', number: 16, position: 'GK', age: 30, overall: 72 },
+  { name: 'Matthieu Epolo', number: 23, position: 'GK', age: 21, overall: 71 },
+  { name: 'Chancel Mbemba', number: 5, position: 'CB', age: 31, overall: 80, star: true },
+  { name: 'Aaron Wan-Bissaka', number: 2, position: 'RB', age: 28, overall: 80 },
+  { name: 'Axel Tuanzebe', number: 4, position: 'CB', age: 28, overall: 74 },
+  { name: 'Arthur Masuaku', number: 3, position: 'LB', age: 32, overall: 76 },
+  { name: 'Joris Kayembe', number: 14, position: 'LB', age: 31, overall: 73 },
+  { name: 'Steve Kapuadi', number: 15, position: 'CB', age: 28, overall: 72 },
+  { name: 'Dylan Batubinsika', number: 6, position: 'CB', age: 29, overall: 74 },
+  { name: 'Gédéon Kalulu', number: 12, position: 'RB', age: 29, overall: 73 },
+  { name: 'Noah Sadiki', number: 8, position: 'CDM', age: 21, overall: 78 },
+  { name: 'Samuel Moutoussamy', number: 13, position: 'CM', age: 29, overall: 74 },
+  { name: 'Edo Kayembe', number: 17, position: 'CDM', age: 28, overall: 75 },
+  { name: 'Ngal\'ayel Mukau', number: 18, position: 'CM', age: 21, overall: 76 },
+  { name: 'Charles Pickel', number: 20, position: 'CDM', age: 29, overall: 73 },
+  { name: 'Nathanaël Mbuku', number: 21, position: 'RW', age: 23, overall: 73 },
+  { name: 'Brian Cipenga', number: 24, position: 'CM', age: 23, overall: 70 },
+  { name: 'Gaël Kakuta', number: 10, position: 'CAM', age: 34, overall: 75 },
+  { name: 'Meschack Elia', number: 11, position: 'RW', age: 28, overall: 74 },
+  { name: 'Théo Bongonda', number: 7, position: 'LW', age: 30, overall: 76 },
+  { name: 'Cédric Bakambu', number: 9, position: 'ST', age: 30, overall: 77 },
+  { name: 'Yoane Wissa', number: 19, position: 'ST', age: 29, overall: 81, star: true },
+  { name: 'Fiston Mayele', number: 22, position: 'ST', age: 31, overall: 75 },
+  { name: 'Simon Banza', number: 25, position: 'ST', age: 29, overall: 75 },
+  { name: 'Aaron Tshibola', number: 26, position: 'CM', age: 31, overall: 69 },
+]

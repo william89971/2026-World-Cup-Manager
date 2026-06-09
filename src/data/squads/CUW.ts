@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Curaçao — 2026 World Cup squad
+export const CUW: RawSquad = [
+  { name: 'Eloy Room', number: 1, position: 'GK', age: 37, overall: 73 },
+  { name: 'Tyrick Bodak', number: 12, position: 'GK', age: 24, overall: 68 },
+  { name: 'Trevor Doornbusch', number: 23, position: 'GK', age: 26, overall: 68 },
+  { name: 'Riechedly Bazoer', number: 5, position: 'CB', age: 29, overall: 74 },
+  { name: 'Armando Obispo', number: 4, position: 'CB', age: 26, overall: 73 },
+  { name: 'Joshua Brenet', number: 2, position: 'RB', age: 32, overall: 72 },
+  { name: 'Shurandy Sambo', number: 13, position: 'RB', age: 24, overall: 71 },
+  { name: 'Sherel Floranus', number: 3, position: 'CB', age: 27, overall: 71 },
+  { name: 'Roshon van Eijma', number: 14, position: 'LB', age: 27, overall: 70 },
+  { name: 'Deveron Fonville', number: 15, position: 'LB', age: 24, overall: 70 },
+  { name: 'Juriën Gaari', number: 6, position: 'CB', age: 28, overall: 69 },
+  { name: 'Leandro Bacuna', number: 8, position: 'CM', age: 34, overall: 73, star: true },
+  { name: 'Juninho Bacuna', number: 7, position: 'CM', age: 28, overall: 73 },
+  { name: 'Livano Comenencia', number: 16, position: 'CM', age: 22, overall: 71 },
+  { name: 'Godfried Roemeratoe', number: 17, position: 'CDM', age: 30, overall: 70 },
+  { name: 'Tyrese Noslin', number: 18, position: 'CM', age: 23, overall: 70 },
+  { name: "Ar'jany Martha", number: 19, position: 'LW', age: 22, overall: 70 },
+  { name: 'Kevin Felida', number: 20, position: 'CM', age: 26, overall: 68 },
+  { name: 'Tahith Chong', number: 10, position: 'RW', age: 26, overall: 74, star: true },
+  { name: 'Sontje Hansen', number: 11, position: 'RM', age: 23, overall: 72 },
+  { name: 'Jürgen Locadia', number: 9, position: 'ST', age: 32, overall: 71 },
+  { name: 'Brandley Kuwas', number: 22, position: 'RM', age: 33, overall: 70 },
+  { name: 'Kenji Gorré', number: 21, position: 'LW', age: 31, overall: 69 },
+  { name: 'Jeremy Antonisse', number: 24, position: 'ST', age: 23, overall: 68 },
+  { name: 'Jearl Margaritha', number: 25, position: 'LW', age: 27, overall: 68 },
+  { name: 'Gervane Kastaneer', number: 26, position: 'ST', age: 29, overall: 67 },
+]

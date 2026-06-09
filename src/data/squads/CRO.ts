@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Croatia — 2026 World Cup squad
+export const CRO: RawSquad = [
+  { name: 'Dominik Livaković', number: 1, position: 'GK', age: 31, overall: 82 },
+  { name: 'Dominik Kotarski', number: 12, position: 'GK', age: 26, overall: 76 },
+  { name: 'Ivor Pandur', number: 23, position: 'GK', age: 26, overall: 74 },
+  { name: 'Joško Gvardiol', number: 6, position: 'CB', age: 24, overall: 86, star: true },
+  { name: 'Duje Ćaleta-Car', number: 4, position: 'CB', age: 29, overall: 78 },
+  { name: 'Josip Šutalo', number: 5, position: 'CB', age: 26, overall: 79 },
+  { name: 'Josip Stanišić', number: 2, position: 'RB', age: 26, overall: 80 },
+  { name: 'Marin Pongračić', number: 21, position: 'CB', age: 28, overall: 78 },
+  { name: 'Martin Erlić', number: 3, position: 'CB', age: 28, overall: 75 },
+  { name: 'Luka Vušković', number: 24, position: 'CB', age: 19, overall: 74 },
+  { name: 'Luka Modrić', number: 10, position: 'CM', age: 40, overall: 84, star: true },
+  { name: 'Mateo Kovačić', number: 8, position: 'CM', age: 32, overall: 84 },
+  { name: 'Mario Pašalić', number: 15, position: 'CM', age: 31, overall: 80 },
+  { name: 'Nikola Vlašić', number: 13, position: 'CAM', age: 28, overall: 79 },
+  { name: 'Luka Sučić', number: 26, position: 'CM', age: 23, overall: 79 },
+  { name: 'Martin Baturina', number: 25, position: 'CAM', age: 23, overall: 78 },
+  { name: 'Kristijan Jakić', number: 11, position: 'CDM', age: 28, overall: 75 },
+  { name: 'Petar Sučić', number: 14, position: 'CM', age: 22, overall: 78 },
+  { name: 'Nikola Moro', number: 16, position: 'CDM', age: 27, overall: 76 },
+  { name: 'Toni Fruk', number: 22, position: 'CAM', age: 24, overall: 74 },
+  { name: 'Ivan Perišić', number: 7, position: 'LW', age: 37, overall: 80 },
+  { name: 'Andrej Kramarić', number: 9, position: 'ST', age: 34, overall: 79 },
+  { name: 'Ante Budimir', number: 17, position: 'ST', age: 34, overall: 79 },
+  { name: 'Marco Pašalić', number: 18, position: 'RW', age: 25, overall: 76 },
+  { name: 'Petar Musa', number: 20, position: 'ST', age: 28, overall: 80 },
+  { name: 'Igor Matanović', number: 19, position: 'ST', age: 23, overall: 74 },
+]

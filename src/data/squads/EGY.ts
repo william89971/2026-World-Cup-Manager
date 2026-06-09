@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Egypt — 2026 World Cup squad
+export const EGY: RawSquad = [
+  { name: 'Mohamed El Shenawy', number: 1, position: 'GK', age: 37, overall: 78 },
+  { name: 'Mostafa Shobeir', number: 16, position: 'GK', age: 28, overall: 73 },
+  { name: 'El Mahdy Soliman', number: 23, position: 'GK', age: 26, overall: 71 },
+  { name: 'Mohamed Hany', number: 2, position: 'RB', age: 30, overall: 74 },
+  { name: 'Ahmed Fatouh', number: 3, position: 'LB', age: 28, overall: 74 },
+  { name: 'Yasser Ibrahim', number: 4, position: 'CB', age: 32, overall: 75 },
+  { name: 'Mohamed Abdelmonem', number: 6, position: 'CB', age: 27, overall: 77 },
+  { name: 'Ramy Rabia', number: 5, position: 'CB', age: 32, overall: 75 },
+  { name: 'Hossam Abdelmaguid', number: 12, position: 'CB', age: 27, overall: 73 },
+  { name: 'Karim Hafez', number: 13, position: 'LB', age: 29, overall: 72 },
+  { name: 'Tarek Alaa', number: 15, position: 'CB', age: 28, overall: 71 },
+  { name: 'Hamdy Fathy', number: 17, position: 'CDM', age: 31, overall: 76 },
+  { name: 'Marwan Attia', number: 18, position: 'CDM', age: 25, overall: 73 },
+  { name: 'Emam Ashour', number: 8, position: 'CM', age: 27, overall: 78 },
+  { name: 'Mohanad Lasheen', number: 19, position: 'CM', age: 26, overall: 73 },
+  { name: 'Nabil Emad', number: 20, position: 'CM', age: 25, overall: 72 },
+  { name: 'Mahmoud Saber', number: 22, position: 'CM', age: 26, overall: 71 },
+  { name: 'Mostafa Ziko', number: 24, position: 'CM', age: 24, overall: 71 },
+  { name: 'Zizo', number: 14, position: 'RW', age: 30, overall: 77 },
+  { name: 'Trézéguet', number: 7, position: 'LW', age: 31, overall: 78 },
+  { name: 'Ibrahim Adel', number: 21, position: 'RW', age: 24, overall: 75 },
+  { name: 'Haissem Hassan', number: 25, position: 'RW', age: 22, overall: 74 },
+  { name: 'Mohamed Salah', number: 10, position: 'RW', age: 33, overall: 88, star: true },
+  { name: 'Omar Marmoush', number: 9, position: 'ST', age: 27, overall: 84, star: true },
+  { name: 'Hamza Abdelkarim', number: 11, position: 'ST', age: 18, overall: 71 },
+  { name: 'Mohamed Alaa', number: 26, position: 'RB', age: 28, overall: 71 },
+]

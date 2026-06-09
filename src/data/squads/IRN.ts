@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Iran — 2026 World Cup squad
+export const IRN: RawSquad = [
+  { name: 'Alireza Beiranvand', number: 1, position: 'GK', age: 33, overall: 78 },
+  { name: 'Payam Niazmand', number: 12, position: 'GK', age: 31, overall: 75 },
+  { name: 'Seyed Hossein Hosseini', number: 22, position: 'GK', age: 33, overall: 74 },
+  { name: 'Ramin Rezaeian', number: 2, position: 'RB', age: 36, overall: 76 },
+  { name: 'Shojae Khalilzadeh', number: 4, position: 'CB', age: 37, overall: 74 },
+  { name: 'Mohammad Hossein Kanaanizadegan', number: 8, position: 'CB', age: 32, overall: 77 },
+  { name: 'Ehsan Hajsafi', number: 3, position: 'LB', age: 36, overall: 75 },
+  { name: 'Milad Mohammadi', number: 5, position: 'LB', age: 32, overall: 74 },
+  { name: 'Saleh Hardani', number: 13, position: 'RB', age: 27, overall: 73 },
+  { name: 'Ali Nemati', number: 15, position: 'CB', age: 30, overall: 72 },
+  { name: 'Arya Yousefi', number: 19, position: 'CB', age: 24, overall: 71 },
+  { name: 'Danial Iri', number: 23, position: 'CB', age: 22, overall: 70 },
+  { name: 'Saeid Ezatolahi', number: 6, position: 'CDM', age: 29, overall: 76 },
+  { name: 'Rouzbeh Cheshmi', number: 14, position: 'CDM', age: 32, overall: 74 },
+  { name: 'Saman Ghoddos', number: 21, position: 'CM', age: 32, overall: 76 },
+  { name: 'Mehdi Torabi', number: 18, position: 'CM', age: 31, overall: 74 },
+  { name: 'Amirmohammad Razaghnian', number: 16, position: 'CM', age: 20, overall: 71 },
+  { name: 'Mohammad Ghorbani', number: 20, position: 'CM', age: 24, overall: 71 },
+  { name: 'Alireza Jahanbakhsh', number: 7, position: 'RW', age: 32, overall: 78, star: true },
+  { name: 'Mehdi Ghayedi', number: 11, position: 'LW', age: 27, overall: 75 },
+  { name: 'Mohammad Mohebi', number: 17, position: 'RW', age: 27, overall: 74 },
+  { name: 'Amirhossein Hosseinzadeh', number: 24, position: 'LW', age: 25, overall: 73 },
+  { name: 'Mehdi Taremi', number: 9, position: 'ST', age: 33, overall: 81, star: true },
+  { name: 'Shahriar Moghanlou', number: 10, position: 'ST', age: 31, overall: 73 },
+  { name: 'Ali Alipour', number: 25, position: 'ST', age: 30, overall: 73 },
+  { name: 'Denis Dargahi', number: 26, position: 'ST', age: 29, overall: 71 },
+]

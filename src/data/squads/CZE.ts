@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Czechia — 2026 World Cup squad
+export const CZE: RawSquad = [
+  { name: 'Matěj Kovář', number: 1, position: 'GK', age: 26, overall: 78 },
+  { name: 'David Zima', number: 2, position: 'CB', age: 25, overall: 76 },
+  { name: 'Tomáš Holeš', number: 3, position: 'CB', age: 33, overall: 76 },
+  { name: 'Robin Hranáč', number: 4, position: 'CB', age: 26, overall: 76 },
+  { name: 'Vladimír Coufal', number: 5, position: 'RB', age: 33, overall: 77 },
+  { name: 'Štěpán Chaloupek', number: 6, position: 'CB', age: 23, overall: 73 },
+  { name: 'Ladislav Krejčí', number: 7, position: 'CB', age: 27, overall: 81, star: true },
+  { name: 'Vladimír Darida', number: 8, position: 'CM', age: 35, overall: 74 },
+  { name: 'Adam Hložek', number: 9, position: 'ST', age: 23, overall: 79 },
+  { name: 'Patrik Schick', number: 10, position: 'ST', age: 30, overall: 83, star: true },
+  { name: 'Jan Kuchta', number: 11, position: 'ST', age: 29, overall: 76 },
+  { name: 'Lukáš Červ', number: 12, position: 'CM', age: 25, overall: 75 },
+  { name: 'Mojmír Chytil', number: 13, position: 'ST', age: 27, overall: 74 },
+  { name: 'David Jurásek', number: 14, position: 'LB', age: 25, overall: 76 },
+  { name: 'Pavel Šulc', number: 15, position: 'CAM', age: 25, overall: 79 },
+  { name: 'Jindřich Staněk', number: 16, position: 'GK', age: 30, overall: 76 },
+  { name: 'Lukáš Provod', number: 17, position: 'LM', age: 29, overall: 78 },
+  { name: 'Michal Sadílek', number: 18, position: 'CM', age: 27, overall: 75 },
+  { name: 'Tomáš Chorý', number: 19, position: 'ST', age: 31, overall: 75 },
+  { name: 'Jaroslav Zelený', number: 20, position: 'LB', age: 33, overall: 73 },
+  { name: 'David Douděra', number: 21, position: 'RB', age: 28, overall: 74 },
+  { name: 'Tomáš Souček', number: 22, position: 'CDM', age: 31, overall: 81, star: true },
+  { name: 'Lukáš Horníček', number: 23, position: 'GK', age: 23, overall: 72 },
+  { name: 'Alexandr Sojka', number: 24, position: 'CM', age: 23, overall: 71 },
+  { name: 'Hugo Sochůrek', number: 25, position: 'CM', age: 18, overall: 70 },
+  { name: 'Denis Višinský', number: 26, position: 'ST', age: 23, overall: 72 },
+]

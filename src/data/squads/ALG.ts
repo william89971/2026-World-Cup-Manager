@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Algeria — 2026 World Cup squad
+export const ALG: RawSquad = [
+  { name: 'Luca Zidane', number: 1, position: 'GK', age: 27, overall: 75 },
+  { name: 'Alexis Guendouz', number: 16, position: 'GK', age: 29, overall: 72 },
+  { name: 'Oussama Benbot', number: 23, position: 'GK', age: 29, overall: 70 },
+  { name: 'Aïssa Mandi', number: 2, position: 'CB', age: 34, overall: 78 },
+  { name: 'Mohamed Amine Tougaï', number: 4, position: 'CB', age: 25, overall: 75 },
+  { name: 'Zinedine Belaïd', number: 5, position: 'CB', age: 25, overall: 72 },
+  { name: 'Ramy Bensebaïni', number: 3, position: 'LB', age: 30, overall: 80 },
+  { name: 'Rayan Aït-Nouri', number: 20, position: 'LB', age: 24, overall: 81 },
+  { name: 'Jaouen Hadjam', number: 17, position: 'LB', age: 22, overall: 74 },
+  { name: 'Rafik Belghali', number: 12, position: 'RB', age: 23, overall: 74 },
+  { name: 'Achraf Abada', number: 13, position: 'RB', age: 23, overall: 70 },
+  { name: 'Samir Chergui', number: 22, position: 'CB', age: 25, overall: 70 },
+  { name: 'Houssem Aouar', number: 8, position: 'CAM', age: 27, overall: 79 },
+  { name: 'Nabil Bentaleb', number: 6, position: 'CDM', age: 31, overall: 76 },
+  { name: 'Ramiz Zerrouki', number: 15, position: 'CDM', age: 27, overall: 76 },
+  { name: 'Hicham Boudaoui', number: 14, position: 'CM', age: 26, overall: 76 },
+  { name: 'Farès Chaïbi', number: 18, position: 'CAM', age: 23, overall: 78 },
+  { name: 'Ibrahim Maza', number: 19, position: 'CAM', age: 20, overall: 77 },
+  { name: 'Yassine Titraoui', number: 24, position: 'CM', age: 24, overall: 71 },
+  { name: 'Riyad Mahrez', number: 7, position: 'RW', age: 35, overall: 83, star: true },
+  { name: 'Mohamed Amoura', number: 9, position: 'ST', age: 25, overall: 81, star: true },
+  { name: 'Amine Gouiri', number: 10, position: 'ST', age: 26, overall: 80 },
+  { name: 'Anis Hadj Moussa', number: 11, position: 'RW', age: 23, overall: 77 },
+  { name: 'Farès Ghedjemis', number: 21, position: 'LW', age: 24, overall: 74 },
+  { name: 'Adil Boulbina', number: 25, position: 'CAM', age: 26, overall: 72 },
+  { name: 'Nadir Benbouali', number: 26, position: 'ST', age: 25, overall: 72 },
+]

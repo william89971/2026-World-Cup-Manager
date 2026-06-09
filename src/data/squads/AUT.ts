@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Austria — 2026 World Cup squad
+export const AUT: RawSquad = [
+  { name: 'Alexander Schlager', number: 1, position: 'GK', age: 30, overall: 78 },
+  { name: 'Patrick Pentz', number: 23, position: 'GK', age: 29, overall: 75 },
+  { name: 'Florian Wiegele', number: 12, position: 'GK', age: 25, overall: 70 },
+  { name: 'David Alaba', number: 8, position: 'CB', age: 33, overall: 82, star: true },
+  { name: 'Kevin Danso', number: 4, position: 'CB', age: 27, overall: 79 },
+  { name: 'Philipp Lienhart', number: 15, position: 'CB', age: 29, overall: 77 },
+  { name: 'David Affengruber', number: 3, position: 'CB', age: 25, overall: 75 },
+  { name: 'Stefan Posch', number: 5, position: 'RB', age: 29, overall: 76 },
+  { name: 'Phillipp Mwene', number: 13, position: 'LB', age: 32, overall: 74 },
+  { name: 'Marco Friedl', number: 2, position: 'LB', age: 28, overall: 76 },
+  { name: 'Alexander Prass', number: 17, position: 'LB', age: 25, overall: 75 },
+  { name: 'Michael Svoboda', number: 22, position: 'CB', age: 29, overall: 72 },
+  { name: 'Konrad Laimer', number: 6, position: 'CM', age: 28, overall: 81 },
+  { name: 'Nicolas Seiwald', number: 10, position: 'CDM', age: 25, overall: 79 },
+  { name: 'Xaver Schlager', number: 14, position: 'CDM', age: 28, overall: 80 },
+  { name: 'Marcel Sabitzer', number: 9, position: 'CM', age: 32, overall: 81, star: true },
+  { name: 'Christoph Baumgartner', number: 19, position: 'CAM', age: 26, overall: 80 },
+  { name: 'Romano Schmid', number: 20, position: 'CAM', age: 26, overall: 76 },
+  { name: 'Florian Grillitsch', number: 18, position: 'CDM', age: 30, overall: 75 },
+  { name: 'Patrick Wimmer', number: 7, position: 'LM', age: 25, overall: 76 },
+  { name: 'Paul Wanner', number: 11, position: 'CAM', age: 20, overall: 78 },
+  { name: 'Carney Chukwuemeka', number: 16, position: 'CM', age: 22, overall: 75 },
+  { name: 'Alessandro Schöpf', number: 21, position: 'CM', age: 32, overall: 71 },
+  { name: 'Marko Arnautović', number: 25, position: 'ST', age: 37, overall: 76, star: true },
+  { name: 'Michael Gregoritsch', number: 24, position: 'ST', age: 32, overall: 76 },
+  { name: 'Saša Kalajdžić', number: 26, position: 'ST', age: 28, overall: 73 },
+]

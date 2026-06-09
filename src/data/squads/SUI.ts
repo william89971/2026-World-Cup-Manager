@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Switzerland — 2026 World Cup squad
+export const SUI: RawSquad = [
+  { name: 'Gregor Kobel', number: 1, position: 'GK', age: 28, overall: 84, star: true },
+  { name: 'Silvan Widmer', number: 2, position: 'RB', age: 33, overall: 75 },
+  { name: 'Nico Elvedi', number: 3, position: 'CB', age: 29, overall: 78 },
+  { name: 'Manuel Akanji', number: 4, position: 'CB', age: 30, overall: 84, star: true },
+  { name: 'Ricardo Rodríguez', number: 5, position: 'LB', age: 33, overall: 76 },
+  { name: 'Remo Freuler', number: 6, position: 'CM', age: 34, overall: 78 },
+  { name: 'Breel Embolo', number: 7, position: 'ST', age: 29, overall: 79 },
+  { name: 'Djibril Sow', number: 8, position: 'CM', age: 29, overall: 77 },
+  { name: 'Zeki Amdouni', number: 9, position: 'ST', age: 25, overall: 76 },
+  { name: 'Granit Xhaka', number: 10, position: 'CDM', age: 33, overall: 83, star: true },
+  { name: 'Rubén Vargas', number: 11, position: 'LW', age: 27, overall: 78 },
+  { name: 'Yvon Mvogo', number: 12, position: 'GK', age: 32, overall: 73 },
+  { name: 'Ardon Jashari', number: 13, position: 'CM', age: 23, overall: 78 },
+  { name: 'Michel Aebischer', number: 14, position: 'CM', age: 29, overall: 76 },
+  { name: 'Eray Cömert', number: 15, position: 'CB', age: 28, overall: 73 },
+  { name: 'Fabian Rieder', number: 16, position: 'CAM', age: 24, overall: 76 },
+  { name: 'Noah Okafor', number: 17, position: 'LW', age: 26, overall: 77 },
+  { name: 'Dan Ndoye', number: 18, position: 'RW', age: 25, overall: 80 },
+  { name: 'Denis Zakaria', number: 19, position: 'CDM', age: 29, overall: 81 },
+  { name: 'Aurèle Amenda', number: 20, position: 'CB', age: 22, overall: 73 },
+  { name: 'Luca Jaquez', number: 21, position: 'CB', age: 22, overall: 72 },
+  { name: 'Marvin Keller', number: 22, position: 'GK', age: 23, overall: 72 },
+  { name: 'Miro Muheim', number: 23, position: 'LB', age: 27, overall: 73 },
+  { name: 'Christian Fassnacht', number: 24, position: 'RM', age: 32, overall: 73 },
+  { name: 'Cedric Itten', number: 25, position: 'ST', age: 29, overall: 73 },
+  { name: 'Johan Manzambi', number: 26, position: 'CM', age: 20, overall: 73 },
+]

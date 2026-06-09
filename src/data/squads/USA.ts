@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// United States — 2026 World Cup squad
+export const USA: RawSquad = [
+  { name: 'Matt Turner', number: 1, position: 'GK', age: 32, overall: 79 },
+  { name: 'Matt Freese', number: 24, position: 'GK', age: 27, overall: 75 },
+  { name: 'Chris Brady', number: 25, position: 'GK', age: 22, overall: 71 },
+  { name: 'Sergiño Dest', number: 2, position: 'RB', age: 25, overall: 80 },
+  { name: 'Antonee Robinson', number: 5, position: 'LB', age: 28, overall: 81 },
+  { name: 'Chris Richards', number: 3, position: 'CB', age: 26, overall: 79 },
+  { name: 'Tim Ream', number: 13, position: 'CB', age: 38, overall: 75 },
+  { name: 'Miles Robinson', number: 12, position: 'CB', age: 29, overall: 77 },
+  { name: 'Mark McKenzie', number: 22, position: 'CB', age: 27, overall: 76 },
+  { name: 'Auston Trusty', number: 6, position: 'CB', age: 27, overall: 76 },
+  { name: 'Joe Scally', number: 23, position: 'RB', age: 23, overall: 75 },
+  { name: 'Alex Freeman', number: 16, position: 'RB', age: 21, overall: 74 },
+  { name: 'Max Arfsten', number: 18, position: 'LB', age: 25, overall: 74 },
+  { name: 'Tyler Adams', number: 4, position: 'CDM', age: 27, overall: 81 },
+  { name: 'Weston McKennie', number: 8, position: 'CM', age: 27, overall: 82 },
+  { name: 'Malik Tillman', number: 17, position: 'CAM', age: 23, overall: 80 },
+  { name: 'Sebastian Berhalter', number: 14, position: 'CM', age: 25, overall: 75 },
+  { name: 'Cristian Roldan', number: 15, position: 'CM', age: 32, overall: 73 },
+  { name: 'Brenden Aaronson', number: 11, position: 'CAM', age: 25, overall: 78 },
+  { name: 'Christian Pulisic', number: 10, position: 'RW', age: 27, overall: 85, star: true },
+  { name: 'Tim Weah', number: 21, position: 'RW', age: 26, overall: 78 },
+  { name: 'Giovanni Reyna', number: 7, position: 'CAM', age: 23, overall: 78 },
+  { name: 'Alejandro Zendejas', number: 20, position: 'RW', age: 27, overall: 76 },
+  { name: 'Folarin Balogun', number: 9, position: 'ST', age: 24, overall: 80 },
+  { name: 'Ricardo Pepi', number: 19, position: 'ST', age: 23, overall: 78 },
+  { name: 'Haji Wright', number: 26, position: 'ST', age: 28, overall: 76 },
+]

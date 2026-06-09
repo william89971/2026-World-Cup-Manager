@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Colombia — 2026 World Cup squad
+export const COL: RawSquad = [
+  { name: 'Camilo Vargas', number: 1, position: 'GK', age: 37, overall: 80 },
+  { name: 'David Ospina', number: 12, position: 'GK', age: 37, overall: 78 },
+  { name: 'Álvaro Montero', number: 22, position: 'GK', age: 31, overall: 76 },
+  { name: 'Daniel Muñoz', number: 4, position: 'RB', age: 30, overall: 82 },
+  { name: 'Davinson Sánchez', number: 23, position: 'CB', age: 30, overall: 81 },
+  { name: 'Johan Mojica', number: 17, position: 'LB', age: 33, overall: 78 },
+  { name: 'Jhon Lucumí', number: 3, position: 'CB', age: 28, overall: 80 },
+  { name: 'Santiago Arias', number: 26, position: 'RB', age: 34, overall: 75 },
+  { name: 'Yerry Mina', number: 13, position: 'CB', age: 31, overall: 78 },
+  { name: 'Willer Ditta', number: 2, position: 'CB', age: 28, overall: 75 },
+  { name: 'Deiver Machado', number: 15, position: 'LB', age: 32, overall: 76 },
+  { name: 'James Rodríguez', number: 10, position: 'CAM', age: 34, overall: 83, star: true },
+  { name: 'Richard Ríos', number: 18, position: 'CM', age: 26, overall: 81 },
+  { name: 'Jhon Arias', number: 7, position: 'RW', age: 28, overall: 81 },
+  { name: 'Juan Fernando Quintero', number: 20, position: 'CAM', age: 33, overall: 78 },
+  { name: 'Gustavo Puerta', number: 16, position: 'CM', age: 22, overall: 75 },
+  { name: 'Juan Camilo Portilla', number: 5, position: 'CDM', age: 26, overall: 75 },
+  { name: 'Jorge Carrascal', number: 8, position: 'CAM', age: 28, overall: 78 },
+  { name: 'Jaminton Campaz', number: 14, position: 'LW', age: 25, overall: 75 },
+  { name: 'Jefferson Lerma', number: 6, position: 'CDM', age: 31, overall: 80 },
+  { name: 'Kevin Castaño', number: 21, position: 'CM', age: 25, overall: 77 },
+  { name: 'Luis Díaz', number: 11, position: 'LW', age: 29, overall: 87, star: true },
+  { name: 'Luis Suárez', number: 9, position: 'ST', age: 28, overall: 80 },
+  { name: 'Jhon Córdoba', number: 19, position: 'ST', age: 33, overall: 78 },
+  { name: 'Juan Camilo Hernández', number: 24, position: 'CF', age: 27, overall: 77 },
+  { name: 'Carlos Andrés Gómez', number: 25, position: 'RW', age: 23, overall: 75 },
+]

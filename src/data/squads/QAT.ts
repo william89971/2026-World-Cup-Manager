@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Qatar — 2026 World Cup squad
+export const QAT: RawSquad = [
+  { name: 'Meshaal Barsham', number: 1, position: 'GK', age: 27, overall: 74 },
+  { name: 'Pedro Miguel', number: 2, position: 'RB', age: 35, overall: 73 },
+  { name: 'Lucas Mendes', number: 3, position: 'LB', age: 35, overall: 72 },
+  { name: 'Issa Laye', number: 4, position: 'CB', age: 28, overall: 72 },
+  { name: 'Jassem Gaber', number: 5, position: 'CM', age: 24, overall: 71 },
+  { name: 'Abdulaziz Hatem', number: 6, position: 'CM', age: 36, overall: 72 },
+  { name: 'Ahmed Alaaeldin', number: 7, position: 'RW', age: 33, overall: 72 },
+  { name: 'Edmilson Junior', number: 8, position: 'CAM', age: 31, overall: 76 },
+  { name: 'Mohammed Muntari', number: 9, position: 'ST', age: 32, overall: 71 },
+  { name: 'Hassan Al-Haydos', number: 10, position: 'CAM', age: 35, overall: 74 },
+  { name: 'Akram Afif', number: 11, position: 'LW', age: 29, overall: 79, star: true },
+  { name: 'Karim Boudiaf', number: 12, position: 'CDM', age: 35, overall: 73 },
+  { name: 'Boualem Khoukhi', number: 13, position: 'CB', age: 35, overall: 73 },
+  { name: 'Homam Ahmed', number: 14, position: 'LB', age: 26, overall: 73 },
+  { name: 'Almoez Ali', number: 15, position: 'ST', age: 29, overall: 77, star: true },
+  { name: 'Sultan Al-Brake', number: 16, position: 'RB', age: 26, overall: 71 },
+  { name: 'Ahmed Fathi', number: 17, position: 'CM', age: 24, overall: 71 },
+  { name: 'Assim Madibo', number: 18, position: 'CDM', age: 29, overall: 73 },
+  { name: 'Yusuf Abdurisag', number: 19, position: 'RW', age: 27, overall: 72 },
+  { name: 'Ayoub Al-Alawi', number: 20, position: 'CB', age: 21, overall: 70 },
+  { name: 'Al-Hussein Al-Hashmi', number: 21, position: 'CB', age: 23, overall: 70 },
+  { name: 'Mahmoud Abunada', number: 22, position: 'GK', age: 26, overall: 71 },
+  { name: 'Mohamed Manai', number: 23, position: 'CM', age: 24, overall: 70 },
+  { name: 'Tahsin Mohammed Jamshid', number: 24, position: 'ST', age: 23, overall: 70 },
+  { name: 'Ahmed Al-Ganehi', number: 25, position: 'RW', age: 23, overall: 70 },
+  { name: 'Salah Zakaria', number: 26, position: 'GK', age: 24, overall: 69 },
+]

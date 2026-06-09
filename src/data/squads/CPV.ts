@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Cape Verde — 2026 World Cup squad (Blue Sharks' debut)
+export const CPV: RawSquad = [
+  { name: 'Vozinha', number: 1, position: 'GK', age: 39, overall: 73 },
+  { name: 'Márcio Rosa', number: 12, position: 'GK', age: 30, overall: 70 },
+  { name: 'Carlos Santos', number: 23, position: 'GK', age: 26, overall: 70 },
+  { name: 'Steven Moreira', number: 2, position: 'RB', age: 31, overall: 75 },
+  { name: 'Wagner Pina', number: 3, position: 'RB', age: 26, overall: 73 },
+  { name: 'Logan Costa', number: 4, position: 'CB', age: 25, overall: 78, star: true },
+  { name: 'Roberto Lopes', number: 5, position: 'CB', age: 33, overall: 73 },
+  { name: 'Sidny Lopes Cabral', number: 6, position: 'CB', age: 22, overall: 73 },
+  { name: 'João Paulo Fernandes', number: 13, position: 'CB', age: 30, overall: 72 },
+  { name: 'Stopira', number: 14, position: 'LB', age: 37, overall: 71 },
+  { name: 'Kelvin Pires', number: 15, position: 'LB', age: 25, overall: 70 },
+  { name: 'Edilson Borges', number: 16, position: 'CB', age: 26, overall: 70 },
+  { name: 'Jamiro Monteiro', number: 8, position: 'CM', age: 32, overall: 76 },
+  { name: 'Deroy Duarte', number: 18, position: 'CM', age: 27, overall: 74 },
+  { name: 'Laros Duarte', number: 20, position: 'CDM', age: 28, overall: 73 },
+  { name: 'Telmo Arcanjo', number: 17, position: 'CAM', age: 24, overall: 73 },
+  { name: 'Yannick Semedo', number: 19, position: 'CM', age: 27, overall: 72 },
+  { name: 'Kevin Pina', number: 22, position: 'LM', age: 25, overall: 72 },
+  { name: 'Garry Rodrigues', number: 11, position: 'RW', age: 35, overall: 74 },
+  { name: 'Ryan Mendes', number: 10, position: 'RW', age: 36, overall: 75, star: true },
+  { name: 'Jovane Cabral', number: 7, position: 'LW', age: 28, overall: 74 },
+  { name: 'Dailon Livramento', number: 9, position: 'ST', age: 24, overall: 74 },
+  { name: 'Nuno da Costa', number: 21, position: 'ST', age: 35, overall: 72 },
+  { name: 'Willy Semedo', number: 24, position: 'ST', age: 33, overall: 72 },
+  { name: 'Gilson Benchimol', number: 25, position: 'ST', age: 24, overall: 71 },
+  { name: 'Hélio Varela', number: 26, position: 'ST', age: 30, overall: 71 },
+]

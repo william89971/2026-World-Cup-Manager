@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Sweden — 2026 World Cup squad
+export const SWE: RawSquad = [
+  { name: 'Viktor Johansson', number: 1, position: 'GK', age: 27, overall: 77 },
+  { name: 'Kristoffer Nordfeldt', number: 12, position: 'GK', age: 36, overall: 73 },
+  { name: 'Jacob Widell Zetterström', number: 23, position: 'GK', age: 28, overall: 73 },
+  { name: 'Victor Lindelöf', number: 3, position: 'CB', age: 31, overall: 80 },
+  { name: 'Isak Hien', number: 4, position: 'CB', age: 26, overall: 80 },
+  { name: 'Hjalmar Ekdal', number: 5, position: 'CB', age: 27, overall: 75 },
+  { name: 'Carl Starfelt', number: 6, position: 'CB', age: 31, overall: 75 },
+  { name: 'Gustaf Lagerbielke', number: 15, position: 'CB', age: 25, overall: 73 },
+  { name: 'Gabriel Gudmundsson', number: 2, position: 'LB', age: 26, overall: 77 },
+  { name: 'Daniel Svensson', number: 18, position: 'LB', age: 23, overall: 76 },
+  { name: 'Emil Holm', number: 21, position: 'RB', age: 25, overall: 75 },
+  { name: 'Eric Smith', number: 13, position: 'CDM', age: 29, overall: 73 },
+  { name: 'Elliot Stroud', number: 20, position: 'LB', age: 23, overall: 71 },
+  { name: 'Lucas Bergvall', number: 8, position: 'CM', age: 20, overall: 79 },
+  { name: 'Mattias Svanberg', number: 7, position: 'CM', age: 27, overall: 78 },
+  { name: 'Yasin Ayari', number: 16, position: 'CM', age: 22, overall: 75 },
+  { name: 'Jesper Karlström', number: 17, position: 'CDM', age: 30, overall: 74 },
+  { name: 'Ken Sema', number: 11, position: 'LM', age: 32, overall: 74 },
+  { name: 'Besfort Zeneli', number: 19, position: 'CM', age: 22, overall: 73 },
+  { name: 'Taha Ali', number: 14, position: 'RW', age: 27, overall: 72 },
+  { name: 'Alexander Isak', number: 9, position: 'ST', age: 26, overall: 87, star: true },
+  { name: 'Viktor Gyökeres', number: 10, position: 'ST', age: 27, overall: 86, star: true },
+  { name: 'Anthony Elanga', number: 22, position: 'RW', age: 24, overall: 79 },
+  { name: 'Benjamin Nygren', number: 24, position: 'CAM', age: 24, overall: 75 },
+  { name: 'Gustaf Nilsson', number: 25, position: 'ST', age: 28, overall: 73 },
+  { name: 'Alexander Bernhardsson', number: 26, position: 'RW', age: 27, overall: 71 },
+]

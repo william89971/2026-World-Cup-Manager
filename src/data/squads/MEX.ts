@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Mexico — 2026 World Cup squad
+export const MEX: RawSquad = [
+  { name: 'Raúl Rangel', number: 1, position: 'GK', age: 26, overall: 77 },
+  { name: 'Jorge Sánchez', number: 2, position: 'RB', age: 28, overall: 76 },
+  { name: 'César Montes', number: 3, position: 'CB', age: 29, overall: 79 },
+  { name: 'Edson Álvarez', number: 4, position: 'CDM', age: 28, overall: 83, star: true },
+  { name: 'Johan Vásquez', number: 5, position: 'CB', age: 27, overall: 80 },
+  { name: 'Érik Lira', number: 6, position: 'CDM', age: 26, overall: 75 },
+  { name: 'Luis Romo', number: 7, position: 'CM', age: 31, overall: 77 },
+  { name: 'Álvaro Fidalgo', number: 8, position: 'CM', age: 29, overall: 79 },
+  { name: 'Raúl Jiménez', number: 9, position: 'ST', age: 35, overall: 79, star: true },
+  { name: 'Alexis Vega', number: 10, position: 'LW', age: 28, overall: 78 },
+  { name: 'Santiago Giménez', number: 11, position: 'ST', age: 25, overall: 81, star: true },
+  { name: 'Carlos Acevedo', number: 12, position: 'GK', age: 30, overall: 74 },
+  { name: 'Guillermo Ochoa', number: 13, position: 'GK', age: 40, overall: 75 },
+  { name: 'Armando González', number: 14, position: 'ST', age: 23, overall: 73 },
+  { name: 'Israel Reyes', number: 15, position: 'CB', age: 26, overall: 76 },
+  { name: 'Julián Quiñones', number: 16, position: 'RW', age: 29, overall: 78 },
+  { name: 'Orbelín Pineda', number: 17, position: 'CAM', age: 30, overall: 78 },
+  { name: 'Obed Vargas', number: 18, position: 'CM', age: 20, overall: 76 },
+  { name: 'Gilberto Mora', number: 19, position: 'CAM', age: 17, overall: 75 },
+  { name: 'Mateo Chávez', number: 20, position: 'LB', age: 22, overall: 74 },
+  { name: 'César Huerta', number: 21, position: 'LW', age: 25, overall: 77 },
+  { name: 'Guillermo Martínez', number: 22, position: 'ST', age: 31, overall: 72 },
+  { name: 'Jesús Gallardo', number: 23, position: 'LB', age: 31, overall: 77 },
+  { name: 'Luis Chávez', number: 24, position: 'CM', age: 30, overall: 77 },
+  { name: 'Roberto Alvarado', number: 25, position: 'RW', age: 27, overall: 77 },
+  { name: 'Brian Gutiérrez', number: 26, position: 'CM', age: 22, overall: 73 },
+]

@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Haiti — 2026 World Cup squad
+export const HAI: RawSquad = [
+  { name: 'Johny Placide', number: 16, position: 'GK', age: 38, overall: 72 },
+  { name: 'Alexandre Pierre', number: 22, position: 'GK', age: 27, overall: 70 },
+  { name: 'Josué Duverger', number: 1, position: 'GK', age: 25, overall: 67 },
+  { name: 'Carlens Arcus', number: 2, position: 'RB', age: 29, overall: 72 },
+  { name: 'Jean-Kévin Duverne', number: 5, position: 'CB', age: 28, overall: 73 },
+  { name: 'Ricardo Adé', number: 4, position: 'CB', age: 30, overall: 71 },
+  { name: 'Hannes Delcroix', number: 6, position: 'CB', age: 27, overall: 74 },
+  { name: 'Wilguens Paugain', number: 3, position: 'LB', age: 24, overall: 70 },
+  { name: 'Duke Lacroix', number: 14, position: 'RB', age: 30, overall: 68 },
+  { name: 'Martin Expérience', number: 15, position: 'CB', age: 25, overall: 69 },
+  { name: 'Keeto Thermoncy', number: 17, position: 'CB', age: 22, overall: 70 },
+  { name: 'Leverton Pierre', number: 13, position: 'LB', age: 24, overall: 69 },
+  { name: 'Jean-Ricner Bellegarde', number: 8, position: 'CM', age: 28, overall: 78, star: true },
+  { name: 'Danley Jean Jacques', number: 18, position: 'CDM', age: 25, overall: 72 },
+  { name: 'Carl-Fred Sainté', number: 20, position: 'CM', age: 26, overall: 69 },
+  { name: 'Woodensky Pierre', number: 21, position: 'CDM', age: 24, overall: 66 },
+  { name: 'Dominique Simon', number: 23, position: 'CAM', age: 27, overall: 68 },
+  { name: 'Wilson Isidor', number: 9, position: 'ST', age: 25, overall: 78, star: true },
+  { name: 'Frantzdy Pierrot', number: 11, position: 'ST', age: 30, overall: 73 },
+  { name: 'Derrick Etienne Jr.', number: 7, position: 'RW', age: 29, overall: 72 },
+  { name: 'Ruben Providence', number: 10, position: 'LW', age: 24, overall: 71 },
+  { name: 'Duckens Nazon', number: 19, position: 'ST', age: 32, overall: 70 },
+  { name: 'Josué Casimir', number: 12, position: 'RW', age: 23, overall: 70 },
+  { name: 'Don Deedson Louicius', number: 24, position: 'LW', age: 23, overall: 68 },
+  { name: 'Lenny Joseph', number: 25, position: 'ST', age: 24, overall: 69 },
+  { name: 'Yassine Fortune', number: 26, position: 'ST', age: 23, overall: 67 },
+]

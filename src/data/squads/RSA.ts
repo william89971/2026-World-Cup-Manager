@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// South Africa — 2026 World Cup squad
+export const RSA: RawSquad = [
+  { name: 'Ronwen Williams', number: 1, position: 'GK', age: 34, overall: 78, star: true },
+  { name: 'Thabang Matuludi', number: 2, position: 'RB', age: 27, overall: 71 },
+  { name: 'Khulumani Ndamane', number: 3, position: 'CB', age: 22, overall: 71 },
+  { name: 'Teboho Mokoena', number: 4, position: 'CM', age: 29, overall: 77, star: true },
+  { name: 'Thalente Mbatha', number: 5, position: 'CDM', age: 26, overall: 73 },
+  { name: 'Aubrey Modiba', number: 6, position: 'LB', age: 30, overall: 74 },
+  { name: 'Oswin Appollis', number: 7, position: 'RW', age: 24, overall: 74 },
+  { name: 'Tshepang Moremi', number: 8, position: 'LW', age: 25, overall: 72 },
+  { name: 'Lyle Foster', number: 9, position: 'ST', age: 25, overall: 76, star: true },
+  { name: 'Relebohile Mofokeng', number: 10, position: 'RW', age: 21, overall: 75 },
+  { name: 'Themba Zwane', number: 11, position: 'CAM', age: 36, overall: 74 },
+  { name: 'Thapelo Maseko', number: 12, position: 'RW', age: 22, overall: 72 },
+  { name: 'Sphephelo Sithole', number: 13, position: 'CDM', age: 27, overall: 73 },
+  { name: 'Mbekezeli Mbokazi', number: 14, position: 'CB', age: 20, overall: 71 },
+  { name: 'Iqraam Rayners', number: 15, position: 'ST', age: 30, overall: 73 },
+  { name: 'Sipho Chaine', number: 16, position: 'GK', age: 29, overall: 72 },
+  { name: 'Evidence Makgopa', number: 17, position: 'ST', age: 26, overall: 72 },
+  { name: 'Samukele Kabini', number: 18, position: 'CB', age: 22, overall: 71 },
+  { name: 'Nkosinathi Sibisi', number: 19, position: 'CB', age: 30, overall: 73 },
+  { name: 'Khuliso Mudau', number: 20, position: 'RB', age: 31, overall: 73 },
+  { name: 'Ime Okon', number: 21, position: 'CB', age: 22, overall: 72 },
+  { name: 'Ricardo Goss', number: 22, position: 'GK', age: 32, overall: 70 },
+  { name: 'Jayden Adams', number: 23, position: 'CM', age: 25, overall: 71 },
+  { name: 'Olwethu Makhanya', number: 24, position: 'CB', age: 22, overall: 71 },
+  { name: 'Kamogelo Sebelebele', number: 25, position: 'LW', age: 23, overall: 71 },
+  { name: 'Bradley Cross', number: 26, position: 'LB', age: 25, overall: 71 },
+]

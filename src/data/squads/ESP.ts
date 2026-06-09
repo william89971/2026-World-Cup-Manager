@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Spain — 2026 World Cup squad
+export const ESP: RawSquad = [
+  { name: 'David Raya', number: 1, position: 'GK', age: 30, overall: 85 },
+  { name: 'Marc Pubill', number: 2, position: 'RB', age: 22, overall: 78 },
+  { name: 'Alejandro Grimaldo', number: 3, position: 'LB', age: 30, overall: 84 },
+  { name: 'Eric García', number: 4, position: 'CB', age: 25, overall: 81 },
+  { name: 'Marcos Llorente', number: 5, position: 'RB', age: 31, overall: 83 },
+  { name: 'Mikel Merino', number: 6, position: 'CM', age: 30, overall: 84 },
+  { name: 'Ferran Torres', number: 7, position: 'ST', age: 26, overall: 83 },
+  { name: 'Fabián Ruiz', number: 8, position: 'CM', age: 30, overall: 85 },
+  { name: 'Gavi', number: 9, position: 'CM', age: 21, overall: 84 },
+  { name: 'Dani Olmo', number: 10, position: 'CAM', age: 28, overall: 85 },
+  { name: 'Yeremy Pino', number: 11, position: 'RW', age: 23, overall: 80 },
+  { name: 'Pedro Porro', number: 12, position: 'RB', age: 26, overall: 82 },
+  { name: 'Joan García', number: 13, position: 'GK', age: 25, overall: 82 },
+  { name: 'Aymeric Laporte', number: 14, position: 'CB', age: 32, overall: 83 },
+  { name: 'Álex Baena', number: 15, position: 'CAM', age: 24, overall: 82 },
+  { name: 'Rodri', number: 16, position: 'CDM', age: 29, overall: 90, star: true },
+  { name: 'Nico Williams', number: 17, position: 'LW', age: 23, overall: 86 },
+  { name: 'Martín Zubimendi', number: 18, position: 'CDM', age: 27, overall: 85 },
+  { name: 'Lamine Yamal', number: 19, position: 'RW', age: 18, overall: 90, star: true },
+  { name: 'Pedri', number: 20, position: 'CM', age: 23, overall: 89, star: true },
+  { name: 'Mikel Oyarzabal', number: 21, position: 'ST', age: 29, overall: 84 },
+  { name: 'Pau Cubarsí', number: 22, position: 'CB', age: 19, overall: 84 },
+  { name: 'Unai Simón', number: 23, position: 'GK', age: 28, overall: 85 },
+  { name: 'Marc Cucurella', number: 24, position: 'LB', age: 27, overall: 84 },
+  { name: 'Víctor Muñoz', number: 25, position: 'RW', age: 20, overall: 75 },
+  { name: 'Borja Iglesias', number: 26, position: 'ST', age: 33, overall: 76 },
+]

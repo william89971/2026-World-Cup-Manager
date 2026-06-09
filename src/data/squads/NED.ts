@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Netherlands — 2026 World Cup squad
+export const NED: RawSquad = [
+  { name: 'Bart Verbruggen', number: 1, position: 'GK', age: 23, overall: 81 },
+  { name: 'Mark Flekken', number: 12, position: 'GK', age: 33, overall: 79 },
+  { name: 'Robin Roefs', number: 13, position: 'GK', age: 23, overall: 76 },
+  { name: 'Virgil van Dijk', number: 4, position: 'CB', age: 34, overall: 87, star: true },
+  { name: 'Micky van de Ven', number: 3, position: 'CB', age: 25, overall: 83 },
+  { name: 'Jurriën Timber', number: 2, position: 'RB', age: 24, overall: 83 },
+  { name: 'Jorrel Hato', number: 5, position: 'CB', age: 20, overall: 79 },
+  { name: 'Denzel Dumfries', number: 22, position: 'RB', age: 30, overall: 81 },
+  { name: 'Nathan Aké', number: 17, position: 'CB', age: 31, overall: 81 },
+  { name: 'Jan Paul van Hecke', number: 15, position: 'CB', age: 25, overall: 77 },
+  { name: 'Mats Wieffer', number: 6, position: 'CDM', age: 26, overall: 78 },
+  { name: 'Frenkie de Jong', number: 21, position: 'CM', age: 29, overall: 86, star: true },
+  { name: 'Ryan Gravenberch', number: 8, position: 'CM', age: 24, overall: 84 },
+  { name: 'Tijjani Reijnders', number: 14, position: 'CM', age: 27, overall: 84 },
+  { name: 'Teun Koopmeiners', number: 20, position: 'CM', age: 28, overall: 80 },
+  { name: 'Marten de Roon', number: 18, position: 'CDM', age: 35, overall: 76 },
+  { name: 'Quinten Timber', number: 16, position: 'CM', age: 25, overall: 78 },
+  { name: 'Guus Til', number: 19, position: 'CM', age: 28, overall: 75 },
+  { name: 'Cody Gakpo', number: 11, position: 'LW', age: 27, overall: 84, star: true },
+  { name: 'Memphis Depay', number: 10, position: 'ST', age: 32, overall: 81 },
+  { name: 'Donyell Malen', number: 7, position: 'RW', age: 27, overall: 79 },
+  { name: 'Justin Kluivert', number: 9, position: 'RW', age: 27, overall: 78 },
+  { name: 'Noa Lang', number: 23, position: 'LM', age: 26, overall: 77 },
+  { name: 'Crysencio Summerville', number: 24, position: 'LM', age: 24, overall: 77 },
+  { name: 'Brian Brobbey', number: 25, position: 'ST', age: 24, overall: 76 },
+  { name: 'Wout Weghorst', number: 26, position: 'ST', age: 33, overall: 76 },
+]

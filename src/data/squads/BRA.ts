@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Brazil — 2026 World Cup squad
+export const BRA: RawSquad = [
+  { name: 'Alisson', number: 1, position: 'GK', age: 33, overall: 87 },
+  { name: 'Ederson', number: 23, position: 'GK', age: 32, overall: 83 },
+  { name: 'Weverton', number: 12, position: 'GK', age: 38, overall: 74 },
+  { name: 'Marquinhos', number: 4, position: 'CB', age: 32, overall: 86, star: true },
+  { name: 'Gabriel Magalhães', number: 3, position: 'CB', age: 28, overall: 86 },
+  { name: 'Bremer', number: 5, position: 'CB', age: 29, overall: 84 },
+  { name: 'Roger Ibañez', number: 14, position: 'CB', age: 27, overall: 79 },
+  { name: 'Danilo', number: 2, position: 'RB', age: 34, overall: 80 },
+  { name: 'Alex Sandro', number: 6, position: 'LB', age: 35, overall: 78 },
+  { name: 'Douglas Santos', number: 16, position: 'LB', age: 32, overall: 78 },
+  { name: 'Léo Pereira', number: 13, position: 'CB', age: 30, overall: 76 },
+  { name: 'Casemiro', number: 17, position: 'CDM', age: 34, overall: 83 },
+  { name: 'Bruno Guimarães', number: 8, position: 'CM', age: 28, overall: 85 },
+  { name: 'Lucas Paquetá', number: 10, position: 'CAM', age: 28, overall: 83 },
+  { name: 'Ederson Moraes', number: 15, position: 'CM', age: 26, overall: 81 },
+  { name: 'Fabinho', number: 18, position: 'CDM', age: 32, overall: 78 },
+  { name: 'Danilo Barbosa', number: 20, position: 'CM', age: 24, overall: 76 },
+  { name: 'Vinícius Júnior', number: 7, position: 'LW', age: 25, overall: 89, star: true },
+  { name: 'Raphinha', number: 11, position: 'RW', age: 29, overall: 87, star: true },
+  { name: 'Neymar', number: 9, position: 'CAM', age: 34, overall: 84 },
+  { name: 'Gabriel Martinelli', number: 19, position: 'LW', age: 25, overall: 82 },
+  { name: 'Matheus Cunha', number: 21, position: 'ST', age: 27, overall: 82 },
+  { name: 'Endrick', number: 22, position: 'ST', age: 19, overall: 80 },
+  { name: 'Luiz Henrique', number: 24, position: 'RW', age: 25, overall: 79 },
+  { name: 'Igor Thiago', number: 25, position: 'ST', age: 24, overall: 78 },
+  { name: 'Rayan', number: 26, position: 'RW', age: 19, overall: 76 },
+]

@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Türkiye — 2026 World Cup squad
+export const TUR: RawSquad = [
+  { name: 'Uğurcan Çakır', number: 1, position: 'GK', age: 30, overall: 82 },
+  { name: 'Mert Günok', number: 12, position: 'GK', age: 36, overall: 77 },
+  { name: 'Altay Bayındır', number: 23, position: 'GK', age: 28, overall: 76 },
+  { name: 'Merih Demiral', number: 3, position: 'CB', age: 28, overall: 81 },
+  { name: 'Abdülkerim Bardakcı', number: 4, position: 'CB', age: 31, overall: 78 },
+  { name: 'Çağlar Söyüncü', number: 5, position: 'CB', age: 30, overall: 78 },
+  { name: 'Ozan Kabak', number: 14, position: 'CB', age: 26, overall: 78 },
+  { name: 'Samet Akaydın', number: 15, position: 'CB', age: 32, overall: 74 },
+  { name: 'Zeki Çelik', number: 2, position: 'RB', age: 29, overall: 78 },
+  { name: 'Mert Müldür', number: 18, position: 'RB', age: 27, overall: 76 },
+  { name: 'Ferdi Kadıoğlu', number: 20, position: 'LB', age: 26, overall: 80 },
+  { name: 'Eren Elmalı', number: 13, position: 'LB', age: 25, overall: 75 },
+  { name: 'Hakan Çalhanoğlu', number: 10, position: 'CDM', age: 32, overall: 86, star: true },
+  { name: 'Orkun Kökçü', number: 8, position: 'CM', age: 25, overall: 80 },
+  { name: 'İsmail Yüksek', number: 6, position: 'CDM', age: 26, overall: 77 },
+  { name: 'Kaan Ayhan', number: 16, position: 'CDM', age: 31, overall: 75 },
+  { name: 'Salih Özcan', number: 17, position: 'CM', age: 28, overall: 76 },
+  { name: 'Arda Güler', number: 7, position: 'CAM', age: 21, overall: 84, star: true },
+  { name: 'Kenan Yıldız', number: 11, position: 'LW', age: 21, overall: 84, star: true },
+  { name: 'Kerem Aktürkoğlu', number: 9, position: 'LW', age: 27, overall: 80 },
+  { name: 'Barış Alper Yılmaz', number: 19, position: 'RW', age: 26, overall: 79 },
+  { name: 'Yunus Akgün', number: 21, position: 'RW', age: 25, overall: 76 },
+  { name: 'İrfan Can Kahveci', number: 22, position: 'CAM', age: 30, overall: 75 },
+  { name: 'Can Uzun', number: 24, position: 'CAM', age: 20, overall: 77 },
+  { name: 'Deniz Gül', number: 25, position: 'ST', age: 20, overall: 74 },
+  { name: 'Oğuz Aydın', number: 26, position: 'RW', age: 24, overall: 73 },
+]

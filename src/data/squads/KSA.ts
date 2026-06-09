@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Saudi Arabia — 2026 World Cup squad
+export const KSA: RawSquad = [
+  { name: 'Mohammed Al Owais', number: 21, position: 'GK', age: 34, overall: 76 },
+  { name: 'Nawaf Al Aqidi', number: 1, position: 'GK', age: 25, overall: 74 },
+  { name: 'Ahmed Al Kassar', number: 22, position: 'GK', age: 27, overall: 71 },
+  { name: 'Saud Abdulhamid', number: 2, position: 'RB', age: 26, overall: 76 },
+  { name: 'Hassan Tambakti', number: 3, position: 'CB', age: 26, overall: 77 },
+  { name: 'Abdulelah Al Amri', number: 5, position: 'CB', age: 29, overall: 76 },
+  { name: 'Ali Lajami', number: 4, position: 'CB', age: 28, overall: 74 },
+  { name: 'Hassan Kadesh', number: 6, position: 'CB', age: 31, overall: 73 },
+  { name: 'Jehad Thikri', number: 12, position: 'RB', age: 26, overall: 73 },
+  { name: 'Nawaf Boushal', number: 13, position: 'LB', age: 25, overall: 73 },
+  { name: 'Moteb Al Harbi', number: 15, position: 'LB', age: 24, overall: 72 },
+  { name: 'Mohammed Abu Al Shamat', number: 16, position: 'RB', age: 26, overall: 72 },
+  { name: 'Ali Majrashi', number: 17, position: 'CB', age: 30, overall: 71 },
+  { name: 'Mohammed Kanno', number: 14, position: 'CDM', age: 31, overall: 78 },
+  { name: 'Nasser Al Dawsari', number: 18, position: 'CM', age: 27, overall: 76 },
+  { name: 'Abdullah Al Khaibari', number: 8, position: 'CDM', age: 29, overall: 74 },
+  { name: 'Musab Al Juwayr', number: 7, position: 'CM', age: 21, overall: 75 },
+  { name: 'Ziyad Al Johani', number: 19, position: 'CM', age: 24, overall: 73 },
+  { name: 'Alaa Al Hajji', number: 20, position: 'CAM', age: 22, overall: 72 },
+  { name: 'Salem Al-Dawsari', number: 10, position: 'LW', age: 34, overall: 81, star: true },
+  { name: 'Firas Al-Buraikan', number: 9, position: 'ST', age: 26, overall: 78, star: true },
+  { name: 'Saleh Al Shehri', number: 11, position: 'ST', age: 32, overall: 76 },
+  { name: 'Abdullah Al Hamdan', number: 23, position: 'ST', age: 26, overall: 74 },
+  { name: 'Khalid Al Ghannam', number: 24, position: 'RW', age: 25, overall: 74 },
+  { name: 'Ayman Yahya', number: 25, position: 'RW', age: 24, overall: 73 },
+  { name: 'Sultan Mandash', number: 26, position: 'LW', age: 25, overall: 72 },
+]

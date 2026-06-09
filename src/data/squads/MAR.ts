@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Morocco — 2026 World Cup squad
+export const MAR: RawSquad = [
+  { name: 'Yassine Bounou', number: 1, position: 'GK', age: 35, overall: 84 },
+  { name: 'Munir Mohamedi', number: 12, position: 'GK', age: 36, overall: 75 },
+  { name: 'El Mehdi Benabid', number: 22, position: 'GK', age: 28, overall: 73 },
+  { name: 'Achraf Hakimi', number: 2, position: 'RB', age: 27, overall: 88, star: true },
+  { name: 'Noussair Mazraoui', number: 3, position: 'RB', age: 28, overall: 83 },
+  { name: 'Nayef Aguerd', number: 5, position: 'CB', age: 30, overall: 82 },
+  { name: 'Romain Saïss', number: 6, position: 'CB', age: 36, overall: 78 },
+  { name: 'Achraf Dari', number: 18, position: 'CB', age: 26, overall: 76 },
+  { name: 'Jawad El Yamiq', number: 17, position: 'CB', age: 33, overall: 75 },
+  { name: 'Adam Masina', number: 20, position: 'LB', age: 32, overall: 75 },
+  { name: 'Yahya Attiat-Allah', number: 21, position: 'LB', age: 30, overall: 74 },
+  { name: 'Sofyan Amrabat', number: 4, position: 'CDM', age: 29, overall: 81 },
+  { name: 'Azzedine Ounahi', number: 8, position: 'CM', age: 26, overall: 80 },
+  { name: 'Bilal El Khannouss', number: 7, position: 'CAM', age: 22, overall: 80 },
+  { name: 'Ismael Saibari', number: 15, position: 'CM', age: 24, overall: 79 },
+  { name: 'Ayyoub Bouaddi', number: 16, position: 'CDM', age: 18, overall: 76 },
+  { name: 'Amir Richardson', number: 23, position: 'CM', age: 24, overall: 75 },
+  { name: 'Brahim Díaz', number: 10, position: 'CAM', age: 26, overall: 84, star: true },
+  { name: 'Hakim Ziyech', number: 11, position: 'RW', age: 33, overall: 79 },
+  { name: 'Eliesse Ben Seghir', number: 14, position: 'CAM', age: 21, overall: 79 },
+  { name: 'Soufiane Rahimi', number: 19, position: 'ST', age: 30, overall: 76 },
+  { name: 'Ayoub El Kaabi', number: 9, position: 'ST', age: 32, overall: 79 },
+  { name: 'Abde Ezzalzouli', number: 13, position: 'LW', age: 24, overall: 79 },
+  { name: 'Amine Adli', number: 24, position: 'RW', age: 26, overall: 78 },
+  { name: 'Chemsdine Talbi', number: 25, position: 'RW', age: 20, overall: 76 },
+  { name: 'Tarik Tissoudali', number: 26, position: 'ST', age: 32, overall: 74 },
+]

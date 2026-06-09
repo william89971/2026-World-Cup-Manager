@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// England — 2026 World Cup squad
+export const ENG: RawSquad = [
+  { name: 'Jordan Pickford', number: 1, position: 'GK', age: 32, overall: 84, star: true },
+  { name: 'Dean Henderson', number: 13, position: 'GK', age: 29, overall: 79 },
+  { name: 'James Trafford', number: 23, position: 'GK', age: 23, overall: 77 },
+  { name: 'Ezri Konsa', number: 2, position: 'CB', age: 28, overall: 80 },
+  { name: 'Nico O\'Reilly', number: 3, position: 'LB', age: 21, overall: 78 },
+  { name: 'John Stones', number: 5, position: 'CB', age: 32, overall: 83 },
+  { name: 'Marc Guéhi', number: 6, position: 'CB', age: 25, overall: 83 },
+  { name: 'Tino Livramento', number: 12, position: 'RB', age: 23, overall: 79 },
+  { name: 'Dan Burn', number: 15, position: 'CB', age: 34, overall: 78 },
+  { name: 'Reece James', number: 24, position: 'RB', age: 26, overall: 82 },
+  { name: 'Djed Spence', number: 25, position: 'LB', age: 25, overall: 78 },
+  { name: 'Jarell Quansah', number: 26, position: 'CB', age: 23, overall: 78 },
+  { name: 'Declan Rice', number: 4, position: 'CDM', age: 27, overall: 88, star: true },
+  { name: 'Elliot Anderson', number: 8, position: 'CM', age: 23, overall: 80 },
+  { name: 'Jude Bellingham', number: 10, position: 'CAM', age: 22, overall: 90, star: true },
+  { name: 'Jordan Henderson', number: 14, position: 'CM', age: 35, overall: 76 },
+  { name: 'Kobbie Mainoo', number: 16, position: 'CM', age: 21, overall: 81 },
+  { name: 'Morgan Rogers', number: 17, position: 'CAM', age: 24, overall: 80 },
+  { name: 'Eberechi Eze', number: 21, position: 'CAM', age: 28, overall: 83 },
+  { name: 'Bukayo Saka', number: 7, position: 'RW', age: 24, overall: 87 },
+  { name: 'Harry Kane', number: 9, position: 'ST', age: 32, overall: 89, star: true },
+  { name: 'Marcus Rashford', number: 11, position: 'LW', age: 28, overall: 83 },
+  { name: 'Anthony Gordon', number: 18, position: 'LW', age: 25, overall: 81 },
+  { name: 'Ollie Watkins', number: 19, position: 'ST', age: 30, overall: 82 },
+  { name: 'Noni Madueke', number: 20, position: 'RW', age: 24, overall: 79 },
+  { name: 'Ivan Toney', number: 22, position: 'ST', age: 30, overall: 80 },
+]

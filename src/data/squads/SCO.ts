@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Scotland — 2026 World Cup squad
+export const SCO: RawSquad = [
+  { name: 'Angus Gunn', number: 1, position: 'GK', age: 30, overall: 77 },
+  { name: 'Craig Gordon', number: 12, position: 'GK', age: 43, overall: 74 },
+  { name: 'Liam Kelly', number: 23, position: 'GK', age: 30, overall: 72 },
+  { name: 'Andy Robertson', number: 3, position: 'LB', age: 32, overall: 84, star: true },
+  { name: 'Kieran Tierney', number: 6, position: 'LB', age: 28, overall: 80 },
+  { name: 'Aaron Hickey', number: 2, position: 'RB', age: 24, overall: 77 },
+  { name: 'Nathan Patterson', number: 18, position: 'RB', age: 24, overall: 75 },
+  { name: 'Anthony Ralston', number: 16, position: 'RB', age: 27, overall: 73 },
+  { name: 'Jack Hendry', number: 4, position: 'CB', age: 31, overall: 76 },
+  { name: 'Grant Hanley', number: 5, position: 'CB', age: 34, overall: 75 },
+  { name: 'Scott McKenna', number: 15, position: 'CB', age: 29, overall: 75 },
+  { name: 'John Souttar', number: 14, position: 'CB', age: 29, overall: 75 },
+  { name: 'Dom Hyam', number: 22, position: 'CB', age: 30, overall: 72 },
+  { name: 'Scott McTominay', number: 8, position: 'CM', age: 29, overall: 84, star: true },
+  { name: 'John McGinn', number: 7, position: 'CM', age: 31, overall: 81 },
+  { name: 'Billy Gilmour', number: 9, position: 'CDM', age: 24, overall: 78 },
+  { name: 'Lewis Ferguson', number: 10, position: 'CM', age: 26, overall: 78 },
+  { name: 'Ryan Christie', number: 11, position: 'CAM', age: 31, overall: 76 },
+  { name: 'Kenny McLean', number: 13, position: 'CM', age: 34, overall: 73 },
+  { name: 'Ben Doak', number: 17, position: 'RW', age: 20, overall: 76 },
+  { name: 'Findlay Curtis', number: 24, position: 'RW', age: 19, overall: 71 },
+  { name: 'Che Adams', number: 20, position: 'ST', age: 29, overall: 76 },
+  { name: 'Lawrence Shankland', number: 19, position: 'ST', age: 30, overall: 75 },
+  { name: 'George Hirst', number: 21, position: 'ST', age: 27, overall: 73 },
+  { name: 'Lyndon Dykes', number: 25, position: 'ST', age: 30, overall: 73 },
+  { name: 'Ross Stewart', number: 26, position: 'ST', age: 29, overall: 72 },
+]

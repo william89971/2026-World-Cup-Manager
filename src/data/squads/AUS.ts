@@ -1,0 +1,31 @@
+import type { RawSquad } from './_type'
+
+// Australia — 2026 World Cup squad
+export const AUS: RawSquad = [
+  { name: 'Mathew Ryan', number: 1, position: 'GK', age: 34, overall: 78, star: true },
+  { name: 'Paul Izzo', number: 12, position: 'GK', age: 31, overall: 72 },
+  { name: 'Patrick Beach', number: 23, position: 'GK', age: 25, overall: 70 },
+  { name: 'Harry Souttar', number: 5, position: 'CB', age: 27, overall: 77 },
+  { name: 'Alessandro Circati', number: 4, position: 'CB', age: 22, overall: 77 },
+  { name: 'Cameron Burgess', number: 6, position: 'CB', age: 30, overall: 74 },
+  { name: 'Milos Degenek', number: 2, position: 'CB', age: 32, overall: 72 },
+  { name: 'Jordan Bos', number: 3, position: 'LB', age: 23, overall: 77 },
+  { name: 'Aziz Behich', number: 16, position: 'LB', age: 35, overall: 73 },
+  { name: 'Kai Trewin', number: 13, position: 'RB', age: 24, overall: 72 },
+  { name: 'Jason Geria', number: 15, position: 'RB', age: 32, overall: 70 },
+  { name: 'Lucas Herrington', number: 14, position: 'RB', age: 23, overall: 70 },
+  { name: 'Jackson Irvine', number: 22, position: 'CM', age: 33, overall: 76, star: true },
+  { name: 'Aiden O’Neill', number: 8, position: 'CDM', age: 27, overall: 74 },
+  { name: 'Connor Metcalfe', number: 7, position: 'CM', age: 26, overall: 74 },
+  { name: 'Cameron Devlin', number: 17, position: 'CDM', age: 28, overall: 72 },
+  { name: 'Paul Okon-Engstler', number: 18, position: 'CM', age: 21, overall: 71 },
+  { name: 'Ajdin Hrustic', number: 10, position: 'CAM', age: 30, overall: 73 },
+  { name: 'Jacob Italiano', number: 20, position: 'LM', age: 24, overall: 70 },
+  { name: 'Mathew Leckie', number: 9, position: 'RW', age: 35, overall: 73 },
+  { name: 'Nestory Irankunda', number: 11, position: 'RW', age: 20, overall: 73 },
+  { name: 'Awer Mabil', number: 21, position: 'LW', age: 30, overall: 73 },
+  { name: 'Cristian Volpato', number: 24, position: 'CAM', age: 22, overall: 74 },
+  { name: 'Nishan Velupillay', number: 19, position: 'LW', age: 24, overall: 71 },
+  { name: 'Mohamed Toure', number: 25, position: 'ST', age: 21, overall: 70 },
+  { name: 'Tete Yengi', number: 26, position: 'ST', age: 25, overall: 69 },
+]
