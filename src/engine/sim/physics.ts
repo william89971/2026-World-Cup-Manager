@@ -5,7 +5,7 @@ import type { EmitFn } from './decision'
 import { clamp, dist, scale, v } from '../util'
 
 /** Advance the ball + resolve possession/tackles/goals for one tick. */
-export function stepBall(world: WorldState, _setup: MatchSetup, rng: () => number, emit: EmitFn): void {
+export function stepBall(world: WorldState, setup: MatchSetup, rng: () => number, emit: EmitFn): void {
   const ball = world.ball
   const owner = byId(world, ball.ownerId)
 
@@ -19,7 +19,8 @@ export function stepBall(world: WorldState, _setup: MatchSetup, rng: () => numbe
     ball.vz = 0
     ball.vel = { ...owner.vel }
     ball.inFlight = false
-    tryTackle(world, owner, rng, emit)
+    // no tackling while a set piece is forming
+    if (world.phase === 'open' || world.phase === 'kickoff') tryTackle(world, setup, owner, rng, emit)
     return
   }
 
@@ -40,12 +41,38 @@ export function stepBall(world: WorldState, _setup: MatchSetup, rng: () => numbe
   const decay = Math.pow(airborne ? BALL.AIR_DRAG : BALL.GROUND_FRICTION, TICK_DT)
   ball.vel = scale(ball.vel, decay)
 
-  if (resolveBounds(world, emit)) return
+  if (resolveBounds(world, setup, emit)) return
   tryControl(world, emit)
+
+  // ── stuck-ball watchdog ──────────────────────────────────────
+  // A loose, near-stationary ball that nobody collects for ~3s (or a NaN'd
+  // position from a physics edge case) is handed to the nearest player.
+  if (!Number.isFinite(ball.pos.x) || !Number.isFinite(ball.pos.y)) {
+    ball.pos = v(0, 0)
+    ball.vel = v(0, 0)
+    ball.z = 0
+    ball.vz = 0
+    ball.inFlight = false
+  }
+  if (!ball.ownerId && world.phase === 'open' && Math.hypot(ball.vel.x, ball.vel.y) < 0.5 && ball.z < 0.3) {
+    ball.idleTicks = (ball.idleTicks ?? 0) + 1
+    if (ball.idleTicks > 30) {
+      const taker = nearestPlayer(world, ball.pos)
+      if (taker) {
+        ball.ownerId = taker.id
+        ball.lastTouch = taker.side
+        ball.inFlight = false
+        ball.shotOutcome = null
+        ball.idleTicks = 0
+      }
+    }
+  } else {
+    ball.idleTicks = 0
+  }
 }
 
 /** Goal-line + sideline detection. Returns true if a stoppage was triggered. */
-function resolveBounds(world: WorldState, emit: EmitFn): boolean {
+function resolveBounds(world: WorldState, setup: MatchSetup, emit: EmitFn): boolean {
   const ball = world.ball
 
   // sidelines → throw-in
@@ -76,7 +103,7 @@ function resolveBounds(world: WorldState, emit: EmitFn): boolean {
     if (ball.lastTouch === attacker) {
       goalKick(world, side, emit)
     } else {
-      corner(world, attacker, Math.sign(ball.pos.x) || 1, emit)
+      corner(world, setup, attacker, Math.sign(ball.pos.x) || 1, emit)
     }
     return true
   }
@@ -123,6 +150,7 @@ function scoreGoal(world: WorldState, side: Side, emit: EmitFn): void {
 function keeperSave(world: WorldState, defendingSide: Side, emit: EmitFn): void {
   const gk = onPitch(world, defendingSide).find((p) => p.role === 'GK')
   if (gk) {
+    gk.saves++
     gk.ratingPoints += 0.16
     emit({ type: 'save', side: defendingSide, playerId: gk.id, playerName: gk.name, pos: { ...gk.pos }, text: `${gk.name} saves!` })
   } else {
@@ -209,7 +237,7 @@ function tryControl(world: WorldState, emit: EmitFn): void {
   ball.lastTouch = controller.side
 }
 
-function tryTackle(world: WorldState, owner: SimPlayer, rng: () => number, emit: EmitFn): void {
+function tryTackle(world: WorldState, setup: MatchSetup, owner: SimPlayer, rng: () => number, emit: EmitFn): void {
   for (const opp of onPitch(world, other(owner.side))) {
     if (dist(opp.pos, owner.pos) > PLAYER.REACH) continue
     const ratio = opp.attrs.defending / (opp.attrs.defending + owner.attrs.dribbling)
@@ -224,14 +252,14 @@ function tryTackle(world: WorldState, owner: SimPlayer, rng: () => number, emit:
         owner.ratingPoints -= 0.03
         emit({ type: 'tackle', side: opp.side, playerId: opp.id, playerName: opp.name, pos: { ...opp.pos }, text: `${opp.name} wins the ball` })
       } else {
-        foul(world, opp, owner, rng, emit)
+        foul(world, setup, opp, owner, rng, emit)
       }
       return
     }
   }
 }
 
-function foul(world: WorldState, fouler: SimPlayer, victim: SimPlayer, rng: () => number, emit: EmitFn): void {
+function foul(world: WorldState, setup: MatchSetup, fouler: SimPlayer, victim: SimPlayer, rng: () => number, emit: EmitFn): void {
   world.stats.fouls[fouler.side]++
   fouler.ratingPoints -= 0.08
   emit({ type: 'foul', side: fouler.side, playerId: fouler.id, playerName: fouler.name, secondaryId: victim.id, secondaryName: victim.name, pos: { ...victim.pos }, text: `Foul by ${fouler.name}` })
@@ -244,6 +272,7 @@ function foul(world: WorldState, fouler: SimPlayer, victim: SimPlayer, rng: () =
     if (fouler.yellow >= 2) {
       fouler.red = true
       fouler.onPitch = false
+      fouler.offSec = world.timeSec
       world.stats.reds[fouler.side]++
       emit({ type: 'red', side: fouler.side, playerId: fouler.id, playerName: fouler.name, pos: { ...fouler.pos }, text: `${fouler.name} is sent off (2nd yellow)!` })
     } else {
@@ -252,6 +281,7 @@ function foul(world: WorldState, fouler: SimPlayer, victim: SimPlayer, rng: () =
   } else if (rng() < 0.005) {
     fouler.red = true
     fouler.onPitch = false
+    fouler.offSec = world.timeSec
     world.stats.reds[fouler.side]++
     emit({ type: 'red', side: fouler.side, playerId: fouler.id, playerName: fouler.name, pos: { ...fouler.pos }, text: `${fouler.name} is sent off!` })
   }
@@ -262,10 +292,23 @@ function foul(world: WorldState, fouler: SimPlayer, victim: SimPlayer, rng: () =
   // most contact inside the box is waved on / given as an indirect free kick;
   // only a clear foul becomes a spot-kick, keeping penalties rare.
   if (inBox && rng() < 0.3) {
-    penalty(world, victim.side, rng, emit)
+    penalty(world, setup, victim.side, rng, emit)
   } else {
-    freeKick(world, victim.side, { ...victim.pos }, emit)
+    freeKick(world, setup, victim.side, { ...victim.pos }, emit)
   }
+}
+
+/** The designated taker for a set piece, if they're on the pitch. */
+function designatedTaker(
+  world: WorldState,
+  setup: MatchSetup,
+  side: Side,
+  kind: 'corners' | 'freeKicks' | 'penalties',
+): SimPlayer | undefined {
+  const team = side === 'home' ? setup.home : setup.away
+  const id = team.setPieceTakers?.[kind]
+  if (!id) return undefined
+  return onPitch(world, side).find((p) => p.id === id)
 }
 
 // ── restart helpers ──────────────────────────────────────────────
@@ -303,22 +346,33 @@ function goalKick(world: WorldState, side: Side, emit: EmitFn): void {
   emit({ type: 'goalkick', side, pos, text: 'Goal kick' })
 }
 
-function corner(world: WorldState, side: Side, xSign: number, emit: EmitFn): void {
+function corner(world: WorldState, setup: MatchSetup, side: Side, xSign: number, emit: EmitFn): void {
   const goalY = ownGoalY(other(side))
   const pos = v(xSign * (PITCH.HALF_W - 0.5), goalY)
   world.stats.corners[side]++
-  giveTo(world, side, pos, (p) => p.role === 'Wing' || p.role === 'WM')
-  world.phase = 'open'
+  const designated = designatedTaker(world, setup, side, 'corners')
+  giveTo(world, side, pos, designated ? (p) => p.id === designated.id : (p) => p.role === 'Wing' || p.role === 'WM')
+  // hold play briefly so the box routine (near post / far post / edge runs) forms
+  world.phase = 'corner'
+  world.restart = { type: 'corner', side, pos: { ...pos }, delay: 30 }
   emit({ type: 'corner', side, pos, text: 'Corner' })
 }
 
-function freeKick(world: WorldState, side: Side, pos: Vec2, emit: EmitFn): void {
-  giveTo(world, side, pos)
-  world.phase = 'open'
+function freeKick(world: WorldState, setup: MatchSetup, side: Side, pos: Vec2, emit: EmitFn): void {
+  const attackingThird = pos.y * attackDir(side) > PITCH.HALF_L - 25
+  const designated = attackingThird ? designatedTaker(world, setup, side, 'freeKicks') : undefined
+  giveTo(world, side, pos, designated ? (p) => p.id === designated.id : undefined)
+  if (attackingThird) {
+    // dangerous free kick: let runners flood the box before delivery
+    world.phase = 'freekick'
+    world.restart = { type: 'freekick', side, pos: { ...pos }, delay: 25 }
+  } else {
+    world.phase = 'open'
+  }
   emit({ type: 'freekick', side, pos, text: 'Free kick' })
 }
 
-function penalty(world: WorldState, side: Side, rng: () => number, emit: EmitFn): void {
+function penalty(world: WorldState, setup: MatchSetup, side: Side, rng: () => number, emit: EmitFn): void {
   emit({ type: 'penalty', side, text: 'PENALTY!' })
   // a penalty is always a shot on target — count it so stats stay consistent
   // (a scored penalty must never show as "0 on target"). Accounting only.
@@ -328,7 +382,7 @@ function penalty(world: WorldState, side: Side, rng: () => number, emit: EmitFn)
   const takers = onPitch(world, side)
     .filter((p) => p.role !== 'GK')
     .sort((a, b) => b.attrs.shooting - a.attrs.shooting)
-  const taker = takers[0]
+  const taker = designatedTaker(world, setup, side, 'penalties') ?? takers[0]
   const gk = onPitch(world, other(side)).find((p) => p.role === 'GK')
   const pScore = clamp(0.78 + (taker ? (taker.attrs.shooting - 80) / 200 : 0) - (gk ? (gk.overall - 80) / 300 : 0), 0.55, 0.92)
   if (rng() < pScore) {
@@ -345,6 +399,7 @@ function penalty(world: WorldState, side: Side, rng: () => number, emit: EmitFn)
     world.ball.ownerId = null
   } else {
     if (gk) {
+      gk.saves++
       gk.ratingPoints += 0.6
       emit({ type: 'save', side: other(side), playerId: gk.id, playerName: gk.name, text: `${gk.name} saves the penalty!` })
     }

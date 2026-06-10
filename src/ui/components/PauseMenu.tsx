@@ -1,20 +1,30 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { MatchSimulation } from '../../engine/sim/MatchSimulation'
 import type { Side } from '../../engine/types'
+import type { Mentality, Pressing } from '../../data/types'
 import { FORMATION_NAMES } from '../../engine/formations'
 
 export default function PauseMenu({
   sim,
   side,
   onAction,
+  onTactic,
   onResume,
 }: {
   sim: MatchSimulation
   side: Side
   onAction: () => void
+  /** Called when a tactical instruction changes (formation/mentality/press/shout). */
+  onTactic?: () => void
   onResume: () => void
 }) {
   const [outId, setOutId] = useState<string | null>(null)
+  const [, refresh] = useState(0)
+  // keep fatigue bars live even if the sim advances while the panel is open
+  useEffect(() => {
+    const t = setInterval(() => refresh((x) => x + 1), 700)
+    return () => clearInterval(t)
+  }, [])
   const team = side === 'home' ? sim.setup.home : sim.setup.away
   const world = sim.world
   const onPitch = world.players.filter((p) => p.side === side && p.onPitch && !p.red)
@@ -31,6 +41,7 @@ export default function PauseMenu({
   const act = (fn: () => void) => {
     fn()
     onAction()
+    onTactic?.()
   }
 
   return (
@@ -99,10 +110,10 @@ export default function PauseMenu({
               </div>
             </Group>
             <Group label="Mentality">
-              <Seg options={['defensive', 'balanced', 'attacking']} value={team.mentality} onPick={(m) => act(() => sim.setMentality(side, m as never))} />
+              <Seg<Mentality> options={['defensive', 'balanced', 'attacking']} value={team.mentality} onPick={(m) => act(() => sim.setMentality(side, m))} />
             </Group>
             <Group label="Pressing">
-              <Seg options={['low', 'medium', 'high']} value={team.pressing} onPick={(p) => act(() => sim.setPressing(side, p as never))} />
+              <Seg<Pressing> options={['low', 'medium', 'high']} value={team.pressing} onPick={(p) => act(() => sim.setPressing(side, p))} />
             </Group>
             <Group label="Shout">
               <div className="flex gap-2">
@@ -139,7 +150,7 @@ function Group({ label, children }: { label: string; children: React.ReactNode }
   )
 }
 
-function Seg({ options, value, onPick }: { options: string[]; value: string; onPick: (v: string) => void }) {
+function Seg<T extends string>({ options, value, onPick }: { options: T[]; value: T; onPick: (v: T) => void }) {
   return (
     <div className="flex gap-1">
       {options.map((o) => (

@@ -33,6 +33,7 @@ function aggregate(n: number) {
   let matches = 0
   let homeWins = 0
   let draws = 0
+  let nilNils = 0
   for (let i = 0; i < n; i++) {
     const h = ids[(i * 7) % ids.length]
     const a = ids[(i * 13 + 3) % ids.length]
@@ -43,11 +44,12 @@ function aggregate(n: number) {
     matches++
     if (r.homeScore > r.awayScore) homeWins++
     else if (r.homeScore === r.awayScore) draws++
+    if (r.homeScore === 0 && r.awayScore === 0) nilNils++
   }
   console.log(
     `\nAGG over ${matches} matches: avg goals/match ${(goals / matches).toFixed(2)}, ` +
       `avg shots/match ${(shots / matches).toFixed(1)}, ` +
-      `home win ${pct(homeWins, matches)}% / draw ${pct(draws, matches)}%`,
+      `home win ${pct(homeWins, matches)}% / draw ${pct(draws, matches)}% / 0-0 ${pct(nilNils, matches)}%`,
   )
 }
 

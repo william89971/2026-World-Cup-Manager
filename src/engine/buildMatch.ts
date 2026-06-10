@@ -16,7 +16,9 @@ export interface SimTeamOptions {
   strength?: number
   mentality?: Mentality
   pressing?: Pressing
-  setPieceTakerId?: string
+  setPieceTakers?: { corners: string; freeKicks: string; penalties: string }
+  /** Per-player attribute multiplier from current form (id → ~0.95..1.05). */
+  formModifiers?: Record<string, number>
 }
 
 function scaledAttrs(p: Player, strength: number) {
@@ -41,13 +43,15 @@ export function toSimTeam(
   const strength = opts.strength ?? 1
   const players: SimTeamSetup['players'] = {}
   for (const p of team.squad) {
+    const form = opts.formModifiers?.[p.id] ?? 1
+    const eff = strength * form
     players[p.id] = {
       id: p.id,
       name: p.name,
       number: p.number,
       role: POS_ROLE[p.position],
-      attrs: scaledAttrs(p, strength),
-      overall: clamp(Math.round(p.overall * strength), 1, 99),
+      attrs: scaledAttrs(p, eff),
+      overall: clamp(Math.round(p.overall * eff), 1, 99),
     }
   }
   return {
@@ -61,7 +65,7 @@ export function toSimTeam(
     starters: lineup.starters.slice(0, 11),
     players,
     strength,
-    setPieceTakerId: opts.setPieceTakerId,
+    setPieceTakers: opts.setPieceTakers,
   }
 }
 
@@ -71,7 +75,7 @@ export function toSimTeamFromTactics(team: Team, tactics: Tactics, opts: SimTeam
     ...opts,
     mentality: tactics.mentality,
     pressing: tactics.pressing,
-    setPieceTakerId: tactics.setPieces.penalties,
+    setPieceTakers: { ...tactics.setPieces },
   })
 }
 
@@ -87,13 +91,15 @@ export interface BuildSetupOptions {
   awayStrength?: number
   homeMentality?: Mentality
   awayMentality?: Mentality
+  homeFormModifiers?: Record<string, number>
+  awayFormModifiers?: Record<string, number>
 }
 
 /** Both sides auto-picked — used for AI-vs-AI instant simulation. */
 export function buildAutoSetup(home: Team, away: Team, opts: BuildSetupOptions = {}): MatchSetup {
   return {
-    home: toSimTeam(home, autoLineup(home), { strength: opts.homeStrength, mentality: opts.homeMentality }),
-    away: toSimTeam(away, autoLineup(away), { strength: opts.awayStrength, mentality: opts.awayMentality }),
+    home: toSimTeam(home, autoLineup(home), { strength: opts.homeStrength, mentality: opts.homeMentality, formModifiers: opts.homeFormModifiers }),
+    away: toSimTeam(away, autoLineup(away), { strength: opts.awayStrength, mentality: opts.awayMentality, formModifiers: opts.awayFormModifiers }),
     knockout: opts.knockout,
     seed: opts.seed,
   }

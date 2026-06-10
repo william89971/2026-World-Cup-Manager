@@ -29,6 +29,12 @@ export interface SimPlayer {
   ratingPoints: number
   goals: number
   assists: number
+  /** Keeper saves made this match. */
+  saves: number
+  /** Match-second this player entered the pitch (0 for starters). */
+  joinedSec: number
+  /** Match-second this player left the pitch (null while still on). */
+  offSec: number | null
   /** Cooldown ticks before this player can kick again (after a pass/shot). */
   kickCd: number
 }
@@ -52,6 +58,8 @@ export interface BallState {
   /** Destination point of the in-flight pass and its intended receiver. */
   passTarget?: Vec2 | null
   targetReceiverId?: string | null
+  /** Ticks the ball has sat loose and near-stationary (stuck-ball watchdog). */
+  idleTicks?: number
 }
 
 export type Phase =
@@ -139,7 +147,8 @@ export interface SimTeamSetup {
   >
   /** Effective strength multiplier (difficulty / morale applied upstream). */
   strength: number
-  setPieceTakerId?: string
+  /** Designated set-piece takers (player ids); engine falls back to best-fit. */
+  setPieceTakers?: { corners: string; freeKicks: string; penalties: string }
 }
 
 export interface MatchSetup {
@@ -173,6 +182,7 @@ export interface PlayerMatchRating {
   rating: number // 1–10
   goals: number
   assists: number
+  saves: number
   minutes: number
   yellow: number
   red: boolean

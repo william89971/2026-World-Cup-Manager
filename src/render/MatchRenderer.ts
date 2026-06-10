@@ -1,14 +1,34 @@
 import * as THREE from 'three'
 import type { MatchSetup, Side, SimPlayer, WorldState } from '../engine/types'
+import type { ReplayFrame } from '../match/replay'
+import { PITCH } from '../engine/constants'
 import { Stadium } from './entities/Stadium'
 import { Ball } from './entities/Ball'
 import { Humanoid } from './entities/Humanoid'
 import { MatchCamera, type CameraMode } from './camera/MatchCamera'
 
+export type Weather = 'clear-night' | 'overcast' | 'rain'
+
 interface Figure {
   h: Humanoid
   facing: number
   prevKickCd: number
+}
+
+interface ActiveReplay {
+  frames: ReplayFrame[]
+  t: number
+  dur: number
+}
+
+/** Per-weather scene parameters. */
+const WEATHER_PRESETS: Record<
+  Weather,
+  { bg: number; fog: [number, number]; hemi: number; sun: number; sunColor: number; pitchShade: number }
+> = {
+  'clear-night': { bg: 0x0a1424, fog: [140, 320], hemi: 1.1, sun: 1.5, sunColor: 0xffffff, pitchShade: 1 },
+  overcast: { bg: 0x39414f, fog: [120, 300], hemi: 0.95, sun: 0.7, sunColor: 0xccd4e0, pitchShade: 0.88 },
+  rain: { bg: 0x232a36, fog: [90, 260], hemi: 0.8, sun: 0.55, sunColor: 0xb8c4d4, pitchShade: 0.78 },
 }
 
 export class MatchRenderer {
@@ -19,6 +39,11 @@ export class MatchRenderer {
   private figures = new Map<string, Figure>()
   private container: HTMLElement
   private setup: MatchSetup
+  private stadium: Stadium
+  private rain: THREE.Points | null = null
+  private rainVel: Float32Array | null = null
+  private replay: ActiveReplay | null = null
+  readonly weather: Weather
 
   constructor(container: HTMLElement, setup: MatchSetup) {
     this.container = container
@@ -34,12 +59,16 @@ export class MatchRenderer {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     container.appendChild(this.renderer.domElement)
 
-    this.scene.background = new THREE.Color(0x0a1424)
-    this.scene.fog = new THREE.Fog(0x0a1424, 140, 320)
+    // weather is decided once per match from the seed and never changes
+    this.weather = pickWeather(setup.seed ?? 0)
+    const preset = WEATHER_PRESETS[this.weather]
 
-    const hemi = new THREE.HemisphereLight(0xcfe8ff, 0x2a5530, 1.1)
+    this.scene.background = new THREE.Color(preset.bg)
+    this.scene.fog = new THREE.Fog(preset.bg, preset.fog[0], preset.fog[1])
+
+    const hemi = new THREE.HemisphereLight(0xcfe8ff, 0x2a5530, preset.hemi)
     this.scene.add(hemi)
-    const sun = new THREE.DirectionalLight(0xffffff, 1.5)
+    const sun = new THREE.DirectionalLight(preset.sunColor, preset.sun)
     sun.position.set(40, 80, 30)
     sun.castShadow = true
     sun.shadow.mapSize.set(2048, 2048)
@@ -47,10 +76,47 @@ export class MatchRenderer {
     c.left = -70; c.right = 70; c.top = 90; c.bottom = -90; c.near = 1; c.far = 220
     this.scene.add(sun)
 
-    this.scene.add(new Stadium().group)
-    this.scene.add(this.ball.mesh)
+    this.stadium = new Stadium(preset.pitchShade)
+    this.scene.add(this.stadium.group)
+    this.scene.add(this.ball.group)
+
+    if (this.weather === 'rain') this.buildRain()
 
     this.cam = new MatchCamera(w / h, this.renderer.domElement)
+  }
+
+  private buildRain() {
+    const count = 2600
+    const positions = new Float32Array(count * 3)
+    this.rainVel = new Float32Array(count)
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * (PITCH.W + 60)
+      positions[i * 3 + 1] = Math.random() * 45
+      positions[i * 3 + 2] = (Math.random() - 0.5) * (PITCH.L + 60)
+      this.rainVel[i] = 26 + Math.random() * 12
+    }
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    const mat = new THREE.PointsMaterial({
+      color: 0xaabdd4,
+      size: 0.14,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false,
+    })
+    this.rain = new THREE.Points(geo, mat)
+    this.scene.add(this.rain)
+  }
+
+  private updateRain(dt: number) {
+    if (!this.rain || !this.rainVel) return
+    const attr = this.rain.geometry.getAttribute('position') as THREE.BufferAttribute
+    const arr = attr.array as Float32Array
+    for (let i = 0; i < this.rainVel.length; i++) {
+      arr[i * 3 + 1] -= this.rainVel[i] * dt
+      if (arr[i * 3 + 1] < 0) arr[i * 3 + 1] = 40 + Math.random() * 5
+    }
+    attr.needsUpdate = true
   }
 
   private kitFor(side: Side, role: string): { shirt: string; shorts: string } {
@@ -62,7 +128,7 @@ export class MatchRenderer {
   private ensure(p: SimPlayer): Figure {
     let f = this.figures.get(p.id)
     if (!f) {
-      const h = new Humanoid(this.kitFor(p.side, p.role))
+      const h = new Humanoid(this.kitFor(p.side, p.role), p.number)
       this.scene.add(h.group)
       f = { h, facing: p.side === 'home' ? 0 : Math.PI, prevKickCd: 0 }
       this.figures.set(p.id, f)
@@ -70,8 +136,69 @@ export class MatchRenderer {
     return f
   }
 
+  // ── goal replay playback ────────────────────────────────────────
+  startReplay(frames: ReplayFrame[]) {
+    if (frames.length < 2) return
+    this.replay = { frames, t: 0, dur: 5 }
+  }
+
+  isReplaying(): boolean {
+    return this.replay !== null
+  }
+
+  skipReplay() {
+    this.replay = null
+  }
+
+  private updateReplay(dt: number) {
+    const r = this.replay!
+    r.t += dt
+    if (r.t >= r.dur) {
+      this.replay = null
+      return
+    }
+    const n = r.frames.length
+    const f = (r.t / r.dur) * (n - 1)
+    const i = Math.min(n - 2, Math.floor(f))
+    const frac = f - i
+    const a = r.frames[i]
+    const b = r.frames[i + 1]
+
+    // interpolate the recorded positions
+    const present = new Set<string>()
+    for (const pa of a.players) {
+      const pb = b.players.find((q) => q.id === pa.id) ?? pa
+      const fig = this.figures.get(pa.id)
+      if (!fig) continue
+      present.add(pa.id)
+      const x = pa.x + (pb.x - pa.x) * frac
+      const z = pa.y + (pb.y - pa.y) * frac
+      const dx = (pb.x - pa.x) / 0.2
+      const dz = (pb.y - pa.y) / 0.2
+      const speed = Math.hypot(dx, dz)
+      if (speed > 0.4) fig.facing = Math.atan2(dx, dz)
+      fig.h.group.visible = true
+      fig.h.group.position.set(x, 0, z)
+      fig.h.update(speed, fig.facing, dt)
+    }
+    const bx = a.ball.x + (b.ball.x - a.ball.x) * frac
+    const bz = a.ball.y + (b.ball.y - a.ball.y) * frac
+    const bh = a.ball.z + (b.ball.z - a.ball.z) * frac
+    this.ball.update(bx, bz, bh, dt)
+    this.cam.replayUpdate(this.ball.mesh.position.x, this.ball.mesh.position.z, dt)
+  }
+
   /** Sync visuals to the latest engine world for one rendered frame. */
   update(world: WorldState, dt: number) {
+    this.stadium.update(dt)
+    this.updateRain(dt)
+
+    if (this.replay) {
+      this.updateReplay(dt)
+      this.renderer.render(this.scene, this.cam.camera)
+      return
+    }
+
     for (const p of world.players) {
       const f = this.figures.get(p.id)
       if (!p.onPitch || p.red) {
@@ -95,9 +222,15 @@ export class MatchRenderer {
     this.renderer.render(this.scene, this.cam.camera)
   }
 
-  /** Cinematic cut to a pitch position (engine x,y). */
+  /** Cinematic cut to a pitch position (engine x,y) + crowd eruption. */
   cutTo(x: number, y: number) {
     this.cam.cutTo(x, y)
+    this.stadium.celebrate()
+  }
+
+  /** Slow establishing pan (kick-off / half-time). */
+  cinematicPan() {
+    this.cam.cinematicPan()
   }
 
   setCameraMode(mode: CameraMode) {
@@ -120,15 +253,24 @@ export class MatchRenderer {
 
   dispose() {
     this.cam.dispose()
+    for (const f of this.figures.values()) f.h.dispose()
     this.renderer.dispose()
     this.renderer.domElement.remove()
     this.scene.traverse((o) => {
-      if (o instanceof THREE.Mesh) {
+      if (o instanceof THREE.Mesh || o instanceof THREE.Points) {
         o.geometry.dispose()
         const m = o.material
         if (Array.isArray(m)) m.forEach((x) => x.dispose())
-        else m.dispose()
+        else (m as THREE.Material).dispose()
       }
     })
   }
+}
+
+/** Deterministic per-match weather from the sim seed (set once at kick-off). */
+function pickWeather(seed: number): Weather {
+  const r = Math.abs(Math.sin(seed * 0.41421 + 1.618)) % 1
+  if (r < 0.55) return 'clear-night'
+  if (r < 0.8) return 'overcast'
+  return 'rain'
 }

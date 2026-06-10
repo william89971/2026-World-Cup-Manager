@@ -3,7 +3,9 @@ import { PITCH } from '../../engine/constants'
 
 // Engine coords (x:[-34,34], y:[-52.5,52.5]) map to Three (x, z); height = Three y.
 
-function makePitchTexture(): THREE.CanvasTexture {
+/** Striped pitch with painted lines and subtle wear in high-traffic zones.
+ *  @param shade 1 = normal, <1 darkens the turf (rain / overcast) */
+function makePitchTexture(shade = 1): THREE.CanvasTexture {
   const scale = 10 // px per metre
   const W = PITCH.W * scale
   const L = PITCH.L * scale
@@ -12,17 +14,47 @@ function makePitchTexture(): THREE.CanvasTexture {
   cv.height = L
   const ctx = cv.getContext('2d')!
 
+  const tint = (hex: string) => {
+    const n = parseInt(hex.slice(1), 16)
+    const r = Math.round(((n >> 16) & 255) * shade)
+    const g = Math.round(((n >> 8) & 255) * shade)
+    const b = Math.round((n & 255) * shade)
+    return `rgb(${r},${g},${b})`
+  }
+
   // mowing stripes along the length
   const bands = 16
   for (let i = 0; i < bands; i++) {
-    ctx.fillStyle = i % 2 === 0 ? '#2f8f3f' : '#2a8238'
+    ctx.fillStyle = i % 2 === 0 ? tint('#2f8f3f') : tint('#2a8238')
     ctx.fillRect(0, (i * L) / bands, W, L / bands)
   }
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.85)'
-  ctx.lineWidth = 3
   const mx = (ex: number) => (ex + PITCH.HALF_W) * scale
   const mz = (ez: number) => (ez + PITCH.HALF_L) * scale
+
+  // wear marks: scuffed turf in the centre circle and both penalty areas
+  const rnd = (n: number) => ((Math.sin(n * 78.233) * 43758.5453) % 1 + 1) % 1
+  const wearPatch = (cx: number, cz: number, spread: number, count: number, seed: number) => {
+    for (let i = 0; i < count; i++) {
+      const a = rnd(seed + i) * Math.PI * 2
+      const r = Math.sqrt(rnd(seed + i + 0.37)) * spread
+      const px = mx(cx) + Math.cos(a) * r * scale
+      const pz = mz(cz) + Math.sin(a) * r * scale * 0.7
+      const size = (1.2 + rnd(seed + i + 0.71) * 2.4) * scale
+      ctx.fillStyle = `rgba(118, 96, 50, ${0.05 + rnd(seed + i + 0.13) * 0.08})`
+      ctx.beginPath()
+      ctx.ellipse(px, pz, size, size * 0.7, a, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+  wearPatch(0, 0, 8, 26, 1) // centre circle
+  wearPatch(0, PITCH.HALF_L - 11, 7, 22, 2) // penalty spots / six-yard traffic
+  wearPatch(0, -(PITCH.HALF_L - 11), 7, 22, 3)
+  wearPatch(0, PITCH.HALF_L - 3, 5, 12, 4)
+  wearPatch(0, -(PITCH.HALF_L - 3), 5, 12, 5)
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)'
+  ctx.lineWidth = 3
   const line = (x1: number, z1: number, x2: number, z2: number) => {
     ctx.beginPath()
     ctx.moveTo(mx(x1), mz(z1))
@@ -130,45 +162,115 @@ function buildStands(): THREE.Group {
   return g
 }
 
-/** Instanced crowd silhouettes dotted across the stands. */
-function buildCrowd(): THREE.InstancedMesh {
-  const count = 4000
-  const geo = new THREE.BoxGeometry(0.4, 0.7, 0.4)
-  const mat = new THREE.MeshStandardMaterial({ roughness: 1 })
-  const mesh = new THREE.InstancedMesh(geo, mat, count)
-  const dummy = new THREE.Object3D()
-  const color = new THREE.Color()
-  const ringX = PITCH.HALF_W + 8
-  const ringZ = PITCH.HALF_L + 8
-  let i = 0
-  // deterministic-ish scatter without Math.random dependence on first frame
-  const rnd = (n: number) => ((Math.sin(n * 12.9898) * 43758.5453) % 1 + 1) % 1
-  while (i < count) {
-    const edge = i % 4
-    const r = rnd(i)
-    const r2 = rnd(i + 0.5)
-    let x: number, z: number
-    const spread = 14
-    if (edge === 0) { x = (r - 0.5) * (ringX * 2); z = -(ringZ + r2 * spread) }
-    else if (edge === 1) { x = (r - 0.5) * (ringX * 2); z = ringZ + r2 * spread }
-    else if (edge === 2) { x = -(ringX + r2 * spread); z = (r - 0.5) * (ringZ * 2) }
-    else { x = ringX + r2 * spread; z = (r - 0.5) * (ringZ * 2) }
-    const tier = Math.floor(r2 * 3)
-    dummy.position.set(x, 1.5 + tier * 4 + r * 1.5, z)
-    dummy.updateMatrix()
-    mesh.setMatrixAt(i, dummy.matrix)
-    color.setHSL(rnd(i + 7), 0.5, 0.45 + rnd(i + 3) * 0.3)
-    mesh.setColorAt(i, color)
-    i++
+/** Floodlight rig: four corner pylons with point lights over the pitch. */
+function buildFloodlights(): THREE.Group {
+  const g = new THREE.Group()
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0x39435c, roughness: 0.8 })
+  const headMat = new THREE.MeshBasicMaterial({ color: 0xf4f7ff })
+  for (const sx of [-1, 1])
+    for (const sz of [-1, 1]) {
+      const x = sx * (PITCH.HALF_W + 16)
+      const z = sz * (PITCH.HALF_L + 16)
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 26, 8), poleMat)
+      pole.position.set(x, 12, z)
+      const head = new THREE.Mesh(new THREE.BoxGeometry(4, 1.6, 0.6), headMat)
+      head.position.set(x, 25.5, z)
+      head.lookAt(0, 0, 0)
+      g.add(pole, head)
+
+      const light = new THREE.PointLight(0xeef4ff, 220, 160, 1.8)
+      light.position.set(sx * (PITCH.HALF_W + 10), 30, sz * (PITCH.HALF_L + 10))
+      g.add(light)
+    }
+  return g
+}
+
+interface CrowdSeat {
+  x: number
+  y: number
+  z: number
+  phase: number
+  hue: number
+}
+
+/** Instanced crowd that sways during play and leaps when a goal goes in. */
+class Crowd {
+  readonly mesh: THREE.InstancedMesh
+  private seats: CrowdSeat[] = []
+  private dummy = new THREE.Object3D()
+  private time = 0
+  private cheer = 0 // >0 while celebrating (seconds remaining)
+  private color = new THREE.Color()
+
+  constructor(count = 4000) {
+    const geo = new THREE.BoxGeometry(0.4, 0.7, 0.4)
+    const mat = new THREE.MeshStandardMaterial({ roughness: 1 })
+    this.mesh = new THREE.InstancedMesh(geo, mat, count)
+    this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    const ringX = PITCH.HALF_W + 8
+    const ringZ = PITCH.HALF_L + 8
+    const rnd = (n: number) => ((Math.sin(n * 12.9898) * 43758.5453) % 1 + 1) % 1
+    for (let i = 0; i < count; i++) {
+      const edge = i % 4
+      const r = rnd(i)
+      const r2 = rnd(i + 0.5)
+      let x: number, z: number
+      const spread = 14
+      if (edge === 0) { x = (r - 0.5) * (ringX * 2); z = -(ringZ + r2 * spread) }
+      else if (edge === 1) { x = (r - 0.5) * (ringX * 2); z = ringZ + r2 * spread }
+      else if (edge === 2) { x = -(ringX + r2 * spread); z = (r - 0.5) * (ringZ * 2) }
+      else { x = ringX + r2 * spread; z = (r - 0.5) * (ringZ * 2) }
+      const tier = Math.floor(r2 * 3)
+      const seat: CrowdSeat = { x, y: 1.5 + tier * 4 + r * 1.5, z, phase: rnd(i + 7) * Math.PI * 2, hue: rnd(i + 7) }
+      this.seats.push(seat)
+      this.dummy.position.set(x, seat.y, z)
+      this.dummy.updateMatrix()
+      this.mesh.setMatrixAt(i, this.dummy.matrix)
+      this.color.setHSL(seat.hue, 0.5, 0.45 + rnd(i + 3) * 0.3)
+      this.mesh.setColorAt(i, this.color)
+    }
   }
-  return mesh
+
+  celebrate() {
+    this.cheer = 2.4
+  }
+
+  /** Animate a rotating slice of seats each frame (cheap, full-stadium effect). */
+  update(dt: number) {
+    this.time += dt
+    const cheering = this.cheer > 0
+    if (cheering) this.cheer -= dt
+    const total = this.seats.length
+    const slice = cheering ? 1400 : 400
+    const start = ((Math.floor(this.time * 47) * slice) % total + total) % total
+    for (let k = 0; k < slice; k++) {
+      const i = (start + k) % total
+      const s = this.seats[i]
+      const bob = cheering
+        ? Math.max(0, Math.sin(this.time * 9 + s.phase)) * 0.55 // jumping
+        : Math.sin(this.time * 1.6 + s.phase) * 0.07 // gentle sway
+      this.dummy.position.set(s.x, s.y + bob, s.z)
+      this.dummy.rotation.y = cheering ? Math.sin(this.time * 5 + s.phase) * 0.3 : 0
+      this.dummy.updateMatrix()
+      this.mesh.setMatrixAt(i, this.dummy.matrix)
+      if (cheering && this.mesh.instanceColor) {
+        // colour flash while celebrating
+        this.color.setHSL((s.hue + this.time * 0.5) % 1, 0.85, 0.6)
+        this.mesh.setColorAt(i, this.color)
+      }
+    }
+    this.mesh.instanceMatrix.needsUpdate = true
+    if (cheering && this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true
+  }
 }
 
 export class Stadium {
   readonly group = new THREE.Group()
+  private crowd: Crowd
 
-  constructor() {
-    const tex = makePitchTexture()
+  /** @param pitchShade 1 = normal turf, <1 darker (overcast / rain) */
+  constructor(pitchShade = 1) {
+    const tex = makePitchTexture(pitchShade)
     const grass = new THREE.Mesh(
       new THREE.PlaneGeometry(PITCH.W, PITCH.L),
       new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 }),
@@ -180,12 +282,22 @@ export class Stadium {
     // surrounding turf apron
     const apron = new THREE.Mesh(
       new THREE.PlaneGeometry(PITCH.W + 12, PITCH.L + 12),
-      new THREE.MeshStandardMaterial({ color: 0x256b30, roughness: 1 }),
+      new THREE.MeshStandardMaterial({ color: new THREE.Color(0x256b30).multiplyScalar(pitchShade), roughness: 1 }),
     )
     apron.rotation.x = -Math.PI / 2
     apron.position.y = -0.02
     this.group.add(apron)
 
-    this.group.add(buildGoal(1), buildGoal(-1), buildCornerFlags(), buildStands(), buildCrowd())
+    this.crowd = new Crowd()
+    this.group.add(buildGoal(1), buildGoal(-1), buildCornerFlags(), buildStands(), buildFloodlights(), this.crowd.mesh)
+  }
+
+  /** Crowd erupts (goal scored). */
+  celebrate() {
+    this.crowd.celebrate()
+  }
+
+  update(dt: number) {
+    this.crowd.update(dt)
   }
 }

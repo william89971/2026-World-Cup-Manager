@@ -22,11 +22,13 @@ import {
   applyMatchResult,
   initCareer,
   availablePlayers,
+  formModifier,
   type CareerState,
   type NewsItem,
 } from '../game/career'
+import type { GoalReplay } from '../match/replay'
 
-export type Screen = 'menu' | 'hub' | 'squad' | 'tactics' | 'prematch' | 'match' | 'postmatch' | 'groups' | 'bracket'
+export type Screen = 'menu' | 'hub' | 'squad' | 'tactics' | 'prematch' | 'match' | 'postmatch' | 'groups' | 'bracket' | 'stats'
 
 let rng = makeRng(20260611)
 
@@ -66,6 +68,13 @@ function autoLineupAvailable(team: Team, career: CareerState) {
   return pickBestXI(filtered, suggestFormation(filtered))
 }
 
+/** Per-player form multipliers for a team (engine applies on top of attrs). */
+function formMods(career: CareerState, teamId: string): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const p of getTeam(teamId).squad) out[p.id] = formModifier(career[p.id])
+  return out
+}
+
 interface GameState {
   screen: Screen
   started: boolean
@@ -78,6 +87,8 @@ interface GameState {
   news: NewsItem[]
   lastResult: MatchResult | null
   lastResultFixtureId: string | null
+  /** Goal replays captured during the user's last played match. */
+  lastReplays: GoalReplay[]
   eliminated: boolean
 
   newGame: (teamId: string, difficulty: Difficulty) => void
@@ -86,7 +97,7 @@ interface GameState {
   ensureTactics: () => Tactics
   userFixture: () => Fixture | null
   buildUserMatchSetup: () => MatchSetup | null
-  finishUserMatch: (result: MatchResult) => void
+  finishUserMatch: (result: MatchResult, replays?: GoalReplay[]) => void
   simRestOfTournament: () => void
   applyPress: (moraleDelta: number, reputationDelta: number) => void
 }
@@ -103,6 +114,7 @@ export const useGame = create<GameState>((set, get) => ({
   news: [],
   lastResult: null,
   lastResultFixtureId: null,
+  lastReplays: [],
   eliminated: false,
 
   newGame: (teamId, difficulty) => {
@@ -123,6 +135,7 @@ export const useGame = create<GameState>((set, get) => ({
       news: [{ id: 'start', kind: 'milestone', text: `${team.flag} ${team.name} begin their 2026 World Cup campaign.` }],
       lastResult: null,
       lastResultFixtureId: null,
+      lastReplays: [],
       eliminated: false,
     })
   },
@@ -159,18 +172,18 @@ export const useGame = create<GameState>((set, get) => ({
 
     const home =
       fixture.homeId === userTeamId
-        ? toSimTeamFromTactics(homeTeam, tactics, { strength: 1 })
-        : toSimTeam(homeTeam, autoLineupAvailable(homeTeam, career), { strength: aiS })
+        ? toSimTeamFromTactics(homeTeam, tactics, { strength: 1, formModifiers: formMods(career, homeTeam.id) })
+        : toSimTeam(homeTeam, autoLineupAvailable(homeTeam, career), { strength: aiS, formModifiers: formMods(career, homeTeam.id) })
     const away =
       fixture.awayId === userTeamId
-        ? toSimTeamFromTactics(awayTeam, tactics, { strength: 1 })
-        : toSimTeam(awayTeam, autoLineupAvailable(awayTeam, career), { strength: aiS })
+        ? toSimTeamFromTactics(awayTeam, tactics, { strength: 1, formModifiers: formMods(career, awayTeam.id) })
+        : toSimTeam(awayTeam, autoLineupAvailable(awayTeam, career), { strength: aiS, formModifiers: formMods(career, awayTeam.id) })
 
     void userIsHome
     return { home, away, knockout, seed: (rng() * 1e9) | 0 }
   },
 
-  finishUserMatch: (result) => {
+  finishUserMatch: (result, replays = []) => {
     const state = get()
     const tournament: TournamentState = structuredCloneState(state.tournament)
     const career = state.career
@@ -189,6 +202,8 @@ export const useGame = create<GameState>((set, get) => ({
       const r = instantSim(getTeam(f.homeId), getTeam(f.awayId), {
         knockout: tournament.stage !== 'GROUP',
         seed: (rng() * 1e9) | 0,
+        homeFormModifiers: formMods(career, f.homeId),
+        awayFormModifiers: formMods(career, f.awayId),
       })
       recordResult(tournament, f.id, toFixtureResult(r, f))
       applyMatchResult(career, r, rng, { knockout: tournament.stage !== 'GROUP' })
@@ -204,7 +219,12 @@ export const useGame = create<GameState>((set, get) => ({
       // sim a stage the user isn't part of (e.g. third-place playoff)
       for (const f of currentFixtures(tournament)) {
         if (f.played || !f.homeId || !f.awayId) continue
-        const r = instantSim(getTeam(f.homeId), getTeam(f.awayId), { knockout: true, seed: (rng() * 1e9) | 0 })
+        const r = instantSim(getTeam(f.homeId), getTeam(f.awayId), {
+          knockout: true,
+          seed: (rng() * 1e9) | 0,
+          homeFormModifiers: formMods(career, f.homeId),
+          awayFormModifiers: formMods(career, f.awayId),
+        })
         recordResult(tournament, f.id, toFixtureResult(r, f))
         applyMatchResult(career, r, rng, { knockout: true })
         news.push(resultNews(r, f))
@@ -223,6 +243,7 @@ export const useGame = create<GameState>((set, get) => ({
       news: [...news, ...state.news].slice(0, 60),
       lastResult: result,
       lastResultFixtureId: fixture.id,
+      lastReplays: replays,
       eliminated: eliminated || state.eliminated,
     })
   },
@@ -239,6 +260,8 @@ export const useGame = create<GameState>((set, get) => ({
         const r = instantSim(getTeam(f.homeId), getTeam(f.awayId), {
           knockout: tournament.stage !== 'GROUP',
           seed: (rng() * 1e9) | 0,
+          homeFormModifiers: formMods(career, f.homeId),
+          awayFormModifiers: formMods(career, f.awayId),
         })
         recordResult(tournament, f.id, toFixtureResult(r, f))
         applyMatchResult(career, r, rng, { knockout: tournament.stage !== 'GROUP' })

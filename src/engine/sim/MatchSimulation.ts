@@ -79,7 +79,10 @@ export class MatchSimulation {
       }
     } else if (w.restart && w.restart.delay > 0) {
       w.restart.delay--
-      if (w.restart.delay === 0) w.phase = 'open'
+      if (w.restart.delay === 0) {
+        w.phase = 'open'
+        w.restart = null
+      }
     }
 
     // ── decisions + movement + physics ──────────────────────────
@@ -123,6 +126,7 @@ export class MatchSimulation {
     w.ball.lastPasserId = null
     if (taker) taker.pos = { x: 0, y: 0 }
     w.phase = 'kickoff'
+    w.restart = null // discard any set piece interrupted by the period change
     if (w.tick === 0) this.emit({ type: 'kickoff', side, text: 'Kick-off' })
   }
 
@@ -184,6 +188,7 @@ export class MatchSimulation {
     if (!out || !rec || w.players.some((p) => p.id === inId && p.onPitch)) return false
 
     out.onPitch = false
+    out.offSec = w.timeSec
     const minutes = Math.floor(w.timeSec / 60)
     w.players.push({
       id: rec.id,
@@ -203,6 +208,9 @@ export class MatchSimulation {
       ratingPoints: 0,
       goals: 0,
       assists: 0,
+      saves: 0,
+      joinedSec: w.timeSec,
+      offSec: null,
       kickCd: 0,
     })
     if (w.ball.ownerId === outId) w.ball.ownerId = inId
@@ -229,17 +237,41 @@ export class MatchSimulation {
     else this.setup.away.pressing = p
   }
 
-  /** Change formation mid-match: re-anchor on-pitch players to new slots. */
+  /** Change formation mid-match: re-anchor on-pitch players to new slots.
+   *  The keeper always keeps the GK slot; outfielders are matched greedily to
+   *  the nearest new anchor so substitutions don't scramble role assignment. */
   setFormation(side: Side, formationName: string): void {
     const team = side === 'home' ? this.setup.home : this.setup.away
     team.formationName = formationName
     const slots = getFormation(formationName).slots
     const players = onPitch(this.world, side)
-    players.forEach((p, i) => {
-      const slot = slots[i] ?? slots[slots.length - 1]
-      p.role = slot.role
-      p.anchor = orientAnchor(slot.x, slot.y, side)
-    })
+
+    const gkSlot = slots.find((s) => s.role === 'GK')
+    const gk = players.find((p) => p.role === 'GK')
+    if (gk && gkSlot) gk.anchor = orientAnchor(gkSlot.x, gkSlot.y, side)
+
+    const outfieldSlots = slots
+      .filter((s) => s.role !== 'GK')
+      .map((s) => ({ role: s.role, anchor: orientAnchor(s.x, s.y, side) }))
+    const outfielders = players.filter((p) => p !== gk)
+    const taken = new Set<number>()
+    for (const p of outfielders) {
+      let bestIdx = -1
+      let bestD = Infinity
+      outfieldSlots.forEach((s, i) => {
+        if (taken.has(i)) return
+        const d = (s.anchor.x - p.anchor.x) ** 2 + (s.anchor.y - p.anchor.y) ** 2
+        if (d < bestD) {
+          bestD = d
+          bestIdx = i
+        }
+      })
+      if (bestIdx >= 0) {
+        taken.add(bestIdx)
+        p.role = outfieldSlots[bestIdx].role
+        p.anchor = { ...outfieldSlots[bestIdx].anchor }
+      }
+    }
   }
 
   shout(side: Side, kind: 'push' | 'direct' | 'hold'): void {
@@ -274,13 +306,15 @@ export class MatchSimulation {
       for (const p of w.players.filter((pl) => pl.side === side)) {
         if (seen.has(p.id)) continue
         seen.add(p.id)
-        const minutes = p.onPitch ? Math.min(90, Math.floor(w.timeSec / 60)) : 45
+        const end = p.offSec ?? w.timeSec
+        const minutes = Math.max(1, Math.floor((end - p.joinedSec) / 60))
         list.push({
           id: p.id,
           name: p.name,
           rating: clamp(Number((6.4 + p.ratingPoints).toFixed(1)), 2, 10),
           goals: p.goals,
           assists: p.assists,
+          saves: p.saves,
           minutes,
           yellow: p.yellow,
           red: p.red,
@@ -290,7 +324,7 @@ export class MatchSimulation {
     }
 
     let winnerId: string | null = null
-    const hs = w.score.home + (w.shootout ? 0 : 0)
+    const hs = w.score.home
     const as = w.score.away
     if (w.score.home !== w.score.away) {
       winnerId = w.score.home > w.score.away ? this.setup.home.teamId : this.setup.away.teamId

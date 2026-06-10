@@ -84,3 +84,44 @@ body {
     @apply inline-flex items-center rounded-md bg-navy-800 px-2 py-0.5 text-xs font-medium text-steel-300;
   }
 }
+
+/* ── screen transitions ───────────────────────────────────────── */
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.screen-enter {
+  animation: screen-in 0.28s ease-out both;
+}
+
+/* live commentary feed lines slide in from the right */
+@keyframes feed-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.feed-enter {
+  animation: feed-in 0.25s ease-out both;
+}
+
+/* form arrows */
+.form-up {
+  color: var(--color-accent-400);
+}
+.form-flat {
+  color: var(--color-steel-400);
+}
+.form-down {
+  color: var(--color-danger-500);
+}

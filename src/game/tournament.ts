@@ -113,11 +113,26 @@ export function groupStandings(state: TournamentState, group: string): Standing[
     else { h.draw++; a.draw++; h.points++; a.points++ }
   }
   for (const t of Object.values(table)) t.gd = t.gf - t.ga
-  return Object.values(table).sort(cmpStanding)
+  return Object.values(table).sort((a, b) => cmpStanding(a, b) || headToHead(state, a.teamId, b.teamId) || a.teamId.localeCompare(b.teamId))
 }
 
+/** Points → GD → GF. Head-to-head / alphabetical applied by the caller. */
 function cmpStanding(a: Standing, b: Standing): number {
-  return b.points - a.points || b.gd - a.gd || b.gf - a.gf || a.teamId.localeCompare(b.teamId)
+  return b.points - a.points || b.gd - a.gd || b.gf - a.gf
+}
+
+/** Negative if `a` beat `b` in their group meeting, positive if `b` won, 0 otherwise. */
+function headToHead(state: TournamentState, a: string, b: string): number {
+  const f = state.fixtures.find(
+    (x) =>
+      x.round === 'GROUP' &&
+      x.played &&
+      x.result &&
+      ((x.homeId === a && x.awayId === b) || (x.homeId === b && x.awayId === a)),
+  )
+  if (!f?.result || f.result.homeScore === f.result.awayScore) return 0
+  const winner = f.result.homeScore > f.result.awayScore ? f.homeId : f.awayId
+  return winner === a ? -1 : 1
 }
 
 export function allGroupStandings(state: TournamentState): Record<string, Standing[]> {
@@ -133,7 +148,8 @@ export function groupStageComplete(state: TournamentState): boolean {
 /** The 8 best third-placed teams, ranked. */
 export function bestThirds(state: TournamentState): Standing[] {
   const thirds = GROUPS.map((g) => groupStandings(state, g.id)[2])
-  return thirds.sort(cmpStanding).slice(0, 8)
+  // cross-group ranking: no head-to-head exists, fall back to alphabetical
+  return thirds.sort((a, b) => cmpStanding(a, b) || a.teamId.localeCompare(b.teamId)).slice(0, 8)
 }
 
 /** Resolve a knockout slot reference (e.g. 'WA','RB','T3','M73','L101') to a team id. */

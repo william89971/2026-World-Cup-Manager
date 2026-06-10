@@ -2,10 +2,18 @@ import { PITCH, PLAYER, TICK_DT } from '../constants'
 import type { SimPlayer, Vec2, WorldState } from '../types'
 import { clamp, len, norm, scale, sub } from '../util'
 
-export function maxSpeed(p: SimPlayer): number {
+/** Heavy-legs penalty: after the hour mark, players under 40% stamina lose
+ *  ~12% of their effectiveness (applies to speed and key decision attributes). */
+export function fatigueFactor(p: SimPlayer, timeSec: number): number {
+  if (timeSec <= 3600 || p.stamina >= 40) return 1
+  // scales 0.88 at 39% stamina down to 0.85 when fully drained
+  return 0.85 + 0.03 * (p.stamina / 40)
+}
+
+export function maxSpeed(p: SimPlayer, timeSec = 0): number {
   const paceFactor = (p.attrs.pace - 50) / 49 // ~ -0.4 .. 1
   const staminaFactor = 0.72 + 0.28 * (p.stamina / 100)
-  return (PLAYER.BASE_SPEED + PLAYER.SPEED_PACE_BONUS * paceFactor) * staminaFactor
+  return (PLAYER.BASE_SPEED + PLAYER.SPEED_PACE_BONUS * paceFactor) * staminaFactor * fatigueFactor(p, timeSec)
 }
 
 /** Steer every on-pitch player toward their target for one tick. */
@@ -15,7 +23,7 @@ export function stepMovement(world: WorldState, targets: Map<string, Vec2>): voi
     const target = targets.get(p.id) ?? p.pos
     const toTarget = sub(target, p.pos)
     const d = len(toTarget)
-    const ms = maxSpeed(p)
+    const ms = maxSpeed(p, world.timeSec)
 
     // slow into the target to avoid jitter
     const speed = d < 1 ? ms * d : ms
@@ -33,8 +41,13 @@ export function stepMovement(world: WorldState, targets: Map<string, Vec2>): voi
       p.vel.y = desiredVel.y
     }
 
-    p.pos.x = clamp(p.pos.x + p.vel.x * TICK_DT, -(PITCH.HALF_W + 2), PITCH.HALF_W + 2)
-    p.pos.y = clamp(p.pos.y + p.vel.y * TICK_DT, -(PITCH.HALF_L + 3), PITCH.HALF_L + 3)
+    p.pos.x = clamp(p.pos.x + p.vel.x * TICK_DT, -(PITCH.HALF_W + 1), PITCH.HALF_W + 1)
+    p.pos.y = clamp(p.pos.y + p.vel.y * TICK_DT, -(PITCH.HALF_L + 1), PITCH.HALF_L + 1)
+    // keep players out of the goal nets (net occupies the strip behind the goal mouth)
+    if (Math.abs(p.pos.y) > PITCH.HALF_L - 0.2 && Math.abs(p.pos.x) < PITCH.GOAL_HALF_W + 1.4) {
+      p.pos.y = Math.sign(p.pos.y) * (PITCH.HALF_L - 0.2)
+      if (p.vel.y * Math.sign(p.pos.y) > 0) p.vel.y = 0
+    }
 
     // stamina drain proportional to effort
     const effort = len(p.vel) / Math.max(ms, 0.1)

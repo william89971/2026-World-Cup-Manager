@@ -1,7 +1,10 @@
 import { useState } from 'react'
+import type { DragEvent } from 'react'
 import type { Mentality, Pressing, Tactics, Team } from '../../data/types'
 import { FORMATION_NAMES, getFormation } from '../../engine/formations'
-import { PosBadge } from './common'
+import { PosBadge, FormArrow } from './common'
+import { useGame } from '../../store/gameStore'
+import { formOf } from '../../game/career'
 
 interface Props {
   team: Team
@@ -12,6 +15,8 @@ interface Props {
 
 export default function TacticsEditor({ team, value, available, onChange }: Props) {
   const [selSlot, setSelSlot] = useState<number | null>(null)
+  const [dragOverSlot, setDragOverSlot] = useState<number | null>(null)
+  const career = useGame((s) => s.career)
   const byId = (id: string) => team.squad.find((p) => p.id === id)!
   const slots = getFormation(value.formationName).slots
 
@@ -27,8 +32,34 @@ export default function TacticsEditor({ team, value, available, onChange }: Prop
     } else {
       starters[slotIdx] = playerId
     }
-    onChange({ ...value, starters })
+    // re-point any set-piece taker who just left the XI at the best shooter
+    const inXI = new Set(starters)
+    const fallback = [...starters].sort((a, b) => byId(b).attributes.shooting - byId(a).attributes.shooting)[0]
+    const setPieces = { ...value.setPieces }
+    for (const k of ['corners', 'freeKicks', 'penalties'] as const) {
+      if (!inXI.has(setPieces[k])) setPieces[k] = fallback
+    }
+    onChange({ ...value, starters, setPieces })
     setSelSlot(null)
+  }
+
+  // ── drag & drop (works alongside tap-to-swap) ──────────────────
+  const onDragStart = (e: DragEvent, playerId: string) => {
+    e.dataTransfer.setData('text/plain', playerId)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  const onSlotDragOver = (e: DragEvent, i: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (dragOverSlot !== i) setDragOverSlot(i)
+  }
+  const onSlotDrop = (e: DragEvent, i: number) => {
+    e.preventDefault()
+    setDragOverSlot(null)
+    const id = e.dataTransfer.getData('text/plain')
+    if (!id || !team.squad.some((p) => p.id === id)) return
+    if (!value.starters.includes(id) && !available.has(id)) return // injured/suspended reserve
+    swapIntoSlot(i, id)
   }
 
   return (
@@ -55,13 +86,23 @@ export default function TacticsEditor({ team, value, available, onChange }: Prop
             const left = ((slot.x + 1) / 2) * 100
             const top = (1 - (slot.y + 1) / 2) * 100
             const sel = selSlot === i
+            const over = dragOverSlot === i
             return (
               <button
                 key={i}
+                draggable
+                onDragStart={(e) => pid && onDragStart(e, pid)}
+                onDragOver={(e) => onSlotDragOver(e, i)}
+                onDragLeave={() => dragOverSlot === i && setDragOverSlot(null)}
+                onDrop={(e) => onSlotDrop(e, i)}
                 onClick={() => (selSlot === null ? setSelSlot(i) : swapIntoSlot(i, value.starters[selSlot]))}
                 style={{ left: `${left}%`, top: `${top}%` }}
-                className={`absolute flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-[9px] font-bold leading-none transition-transform ${
-                  sel ? 'scale-125 bg-accent-500 text-navy-950 ring-2 ring-white' : 'bg-navy-700 text-white hover:bg-navy-600'
+                className={`absolute flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 cursor-grab flex-col items-center justify-center rounded-full text-[9px] font-bold leading-none transition-transform active:cursor-grabbing ${
+                  sel
+                    ? 'scale-125 bg-accent-500 text-navy-950 ring-2 ring-white'
+                    : over
+                      ? 'scale-125 bg-navy-600 text-white ring-2 ring-accent-400'
+                      : 'bg-navy-700 text-white hover:bg-navy-600'
                 }`}
                 title={p?.name}
               >
@@ -72,7 +113,7 @@ export default function TacticsEditor({ team, value, available, onChange }: Prop
           })}
         </div>
         <p className="text-steel-500 mt-2 text-center text-[11px]">
-          {selSlot === null ? 'Tap a position, then a reserve or another position to swap.' : 'Now tap a reserve or another position.'}
+          {selSlot === null ? 'Drag players between positions, or tap a position then a reserve.' : 'Now tap a reserve or another position.'}
         </p>
       </div>
 
@@ -85,7 +126,7 @@ export default function TacticsEditor({ team, value, available, onChange }: Prop
 
         <div>
           <div className="text-steel-400 mb-1 text-[11px] font-bold uppercase">Set-piece takers</div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <Taker label="Corners" ids={value.starters} team={team} value={value.setPieces.corners} onChange={(id) => onChange({ ...value, setPieces: { ...value.setPieces, corners: id } })} />
             <Taker label="Free kicks" ids={value.starters} team={team} value={value.setPieces.freeKicks} onChange={(id) => onChange({ ...value, setPieces: { ...value.setPieces, freeKicks: id } })} />
             <Taker label="Penalties" ids={value.starters} team={team} value={value.setPieces.penalties} onChange={(id) => onChange({ ...value, setPieces: { ...value.setPieces, penalties: id } })} />
@@ -101,14 +142,17 @@ export default function TacticsEditor({ team, value, available, onChange }: Prop
                 <button
                   key={p.id}
                   disabled={!avail || selSlot === null}
+                  draggable={avail}
+                  onDragStart={(e) => onDragStart(e, p.id)}
                   onClick={() => selSlot !== null && swapIntoSlot(selSlot, p.id)}
                   className={`flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-xs ${
-                    !avail ? 'opacity-40' : selSlot !== null ? 'hover:bg-navy-700' : ''
+                    !avail ? 'opacity-40' : selSlot !== null ? 'hover:bg-navy-700' : 'cursor-grab active:cursor-grabbing'
                   }`}
                 >
                   <PosBadge group={p.group} />
                   <span className="text-steel-500 w-5">{p.number}</span>
                   <span className="flex-1 truncate">{p.name}</span>
+                  <FormArrow form={formOf(career[p.id])} />
                   <span className="text-steel-400">{p.overall}</span>
                   {!avail && <span className="text-danger-500 text-[10px]">OUT</span>}
                 </button>

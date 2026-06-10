@@ -1,4 +1,17 @@
 import type { ReactNode } from 'react'
+import type { Form } from '../../game/career'
+
+/** Current-form indicator: ↑ good form, → neutral, ↓ poor form. */
+export function FormArrow({ form }: { form: Form }) {
+  if (form === null) return <span className="text-steel-600 w-4 text-center text-xs">·</span>
+  const [glyph, cls, label] =
+    form === 'up' ? ['▲', 'form-up', 'In form'] : form === 'down' ? ['▼', 'form-down', 'Poor form'] : ['▶', 'form-flat', 'Steady']
+  return (
+    <span title={label} className={`w-4 text-center text-[10px] font-black ${cls}`}>
+      {glyph}
+    </span>
+  )
+}
 
 export function MoraleBar({ value, className = '' }: { value: number; className?: string }) {
   const color = value >= 70 ? 'bg-accent-500' : value >= 45 ? 'bg-warn-500' : 'bg-danger-500'

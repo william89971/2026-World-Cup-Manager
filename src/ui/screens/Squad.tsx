@@ -1,8 +1,8 @@
 import { useGame } from '../../store/gameStore'
 import { getTeam } from '../../data'
 import NavBar from '../components/NavBar'
-import { MoraleBar, PosBadge, Pill, ratingColor } from '../components/common'
-import { topScorers } from '../../game/career'
+import { FormArrow, MoraleBar, PosBadge, Pill, ratingColor } from '../components/common'
+import { formOf, topScorers } from '../../game/career'
 
 const GROUP_ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3 } as const
 
@@ -16,8 +16,8 @@ export default function Squad() {
     <div className="flex h-full flex-col">
       <NavBar />
       <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 lg:grid-cols-4">
-        <div className="panel overflow-hidden lg:col-span-3">
-          <table className="w-full text-sm">
+        <div className="panel overflow-x-auto lg:col-span-3">
+          <table className="w-full min-w-[760px] text-sm">
             <thead className="bg-navy-800 text-steel-400 text-[11px]">
               <tr>
                 <th className="px-3 py-2 text-left">#</th>
@@ -32,6 +32,7 @@ export default function Squad() {
                 <th className="px-2 py-2 text-center">DEF</th>
                 <th className="px-2 py-2 text-center">PHY</th>
                 <th className="px-2 py-2 text-left">Morale</th>
+                <th className="px-2 py-2 text-center">Form</th>
                 <th className="px-2 py-2 text-center">Last</th>
                 <th className="px-2 py-2 text-left">Status</th>
               </tr>
@@ -58,6 +59,7 @@ export default function Squad() {
                     <td className="px-2 py-1.5 text-center text-steel-300">{a.defending}</td>
                     <td className="px-2 py-1.5 text-center text-steel-300">{a.physicality}</td>
                     <td className="px-2 py-1.5"><div className="w-16"><MoraleBar value={c?.morale ?? 70} /></div></td>
+                    <td className="px-2 py-1.5 text-center"><FormArrow form={formOf(c)} /></td>
                     <td className={`px-2 py-1.5 text-center font-semibold ${c?.lastRating ? ratingColor(c.lastRating) : 'text-steel-600'}`}>
                       {c?.lastRating ? c.lastRating.toFixed(1) : '–'}
                     </td>

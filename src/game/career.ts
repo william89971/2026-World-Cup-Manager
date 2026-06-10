@@ -13,10 +13,36 @@ export interface PlayerCareer {
   yellowAccrued: number // toward a 2-yellow ban
   goals: number
   assists: number
+  saves: number // GK saves across the tournament
+  yellows: number // total yellow cards across the tournament
   apps: number
   lastRating: number | null
   avgRating: number
   ratedMatches: number
+  /** Ratings from the player's last 3 appearances (most recent last). */
+  recentRatings: number[]
+}
+
+export type Form = 'up' | 'flat' | 'down' | null
+
+/** Average of the last 3 match ratings, or null with no appearances. */
+export function formRating(c: PlayerCareer | undefined): number | null {
+  if (!c || c.recentRatings.length === 0) return null
+  return c.recentRatings.reduce((s, r) => s + r, 0) / c.recentRatings.length
+}
+
+/** Form arrow bucket: ↑ ≥7.2, → 6.2–7.2, ↓ below. */
+export function formOf(c: PlayerCareer | undefined): Form {
+  const f = formRating(c)
+  if (f === null) return null
+  return f >= 7.2 ? 'up' : f >= 6.2 ? 'flat' : 'down'
+}
+
+/** Attribute multiplier the engine applies on top of base attributes (±5%). */
+export function formModifier(c: PlayerCareer | undefined): number {
+  const f = formRating(c)
+  if (f === null) return 1
+  return clamp(1 + (f - 6.6) * 0.018, 0.95, 1.05)
 }
 
 export type CareerState = Record<string, PlayerCareer>
@@ -43,10 +69,13 @@ export function initCareer(): CareerState {
         yellowAccrued: 0,
         goals: 0,
         assists: 0,
+        saves: 0,
+        yellows: 0,
         apps: 0,
         lastRating: null,
         avgRating: 0,
         ratedMatches: 0,
+        recentRatings: [],
       }
     }
   }
@@ -81,6 +110,14 @@ export function applyMatchResult(
   const homeWin = homeScore > awayScore
   const draw = homeScore === awayScore
 
+  // who was unavailable BEFORE this match (so unused-sub penalties skip them)
+  const unavailableBefore = new Set<string>()
+  for (const teamId of [homeId, awayId])
+    for (const p of TEAMS[teamId].squad) {
+      const c = career[p.id]
+      if (c && (c.injuredMatches > 0 || c.suspendedMatches > 0)) unavailableBefore.add(p.id)
+    }
+
   const sideOutcome = (teamId: string, won: boolean, drew: boolean) => {
     for (const p of TEAMS[teamId].squad) {
       const c = career[p.id]
@@ -95,43 +132,53 @@ export function applyMatchResult(
   sideOutcome(awayId, !homeWin && !draw, draw)
 
   const applyRatings = (teamId: string, ratings: MatchResult['ratings']['home']) => {
+    const appeared = new Set<string>()
     for (const r of ratings) {
       const c = career[r.id]
       if (!c) continue
-      if (r.minutes > 0) {
-        c.apps++
-        c.lastRating = r.rating
-        c.ratedMatches++
-        c.avgRating = (c.avgRating * (c.ratedMatches - 1) + r.rating) / c.ratedMatches
-        c.fitness = clamp(c.fitness - r.minutes * 0.4, 30, 100)
-        c.goals += r.goals
-        c.assists += r.assists
-        c.morale = clamp(c.morale + r.goals * 6 + r.assists * 3 + (r.rating > 7.5 ? 3 : r.rating < 5.5 ? -3 : 0), 0, 100)
+      appeared.add(r.id)
+      c.apps++
+      c.lastRating = r.rating
+      c.ratedMatches++
+      c.avgRating = (c.avgRating * (c.ratedMatches - 1) + r.rating) / c.ratedMatches
+      c.recentRatings = [...c.recentRatings, r.rating].slice(-3)
+      c.fitness = clamp(c.fitness - r.minutes * 0.4, 30, 100)
+      c.goals += r.goals
+      c.assists += r.assists
+      c.saves += r.saves
+      c.yellows += r.yellow
+      c.morale = clamp(c.morale + r.goals * 6 + r.assists * 3 + (r.rating > 7.5 ? 3 : r.rating < 5.5 ? -3 : 0), 0, 100)
 
-        // yellow / red → suspension
-        if (r.red) {
+      // yellow / red → suspension
+      if (r.red) {
+        c.suspendedMatches = Math.max(c.suspendedMatches, 1)
+        c.yellowAccrued = 0
+        items.push(news('suspension', `${r.name} (${TEAMS[teamId].name}) is suspended after a red card.`))
+      } else if (r.yellow > 0) {
+        c.yellowAccrued += r.yellow
+        if (c.yellowAccrued >= 2) {
           c.suspendedMatches = Math.max(c.suspendedMatches, 1)
           c.yellowAccrued = 0
-          items.push(news('suspension', `${r.name} (${TEAMS[teamId].name}) is suspended after a red card.`))
-        } else if (r.yellow > 0) {
-          c.yellowAccrued += r.yellow
-          if (c.yellowAccrued >= 2) {
-            c.suspendedMatches = Math.max(c.suspendedMatches, 1)
-            c.yellowAccrued = 0
-            items.push(news('suspension', `${r.name} (${TEAMS[teamId].name}) misses the next match — two yellow cards.`))
-          }
+          items.push(news('suspension', `${r.name} (${TEAMS[teamId].name}) misses the next match — two yellow cards.`))
         }
-
-        // injury chance, weighted by (inverse) physicality
-        const phys = TEAMS[teamId].squad.find((p) => p.id === r.id)?.attributes.physicality ?? 75
-        if (rng() < 0.035 * (1.4 - phys / 130)) {
-          c.injuredMatches = rng() < 0.4 ? 2 : 1
-          c.morale = clamp(c.morale - 8, 0, 100)
-          items.push(news('injury', `${r.name} (${TEAMS[teamId].name}) picked up an injury and is out for ${c.injuredMatches} match${c.injuredMatches > 1 ? 'es' : ''}.`))
-        }
-      } else {
-        c.fitness = clamp(c.fitness + 12, 0, 100) // rested
       }
+
+      // injury chance, weighted by (inverse) physicality
+      const phys = TEAMS[teamId].squad.find((p) => p.id === r.id)?.attributes.physicality ?? 75
+      if (rng() < 0.035 * (1.4 - phys / 130)) {
+        c.injuredMatches = rng() < 0.4 ? 2 : 1
+        c.morale = clamp(c.morale - 8, 0, 100)
+        items.push(news('injury', `${r.name} (${TEAMS[teamId].name}) picked up an injury and is out for ${c.injuredMatches} match${c.injuredMatches > 1 ? 'es' : ''}.`))
+      }
+    }
+
+    // players who didn't get on: recover fitness; available unused subs take a
+    // small morale dip (injured/suspended players are exempt — they weren't snubbed)
+    for (const p of TEAMS[teamId].squad) {
+      const c = career[p.id]
+      if (!c || appeared.has(p.id)) continue
+      c.fitness = clamp(c.fitness + 12, 0, 100)
+      if (!unavailableBefore.has(p.id)) c.morale = clamp(c.morale - 1, 0, 100)
     }
   }
   applyRatings(homeId, result.ratings.home)

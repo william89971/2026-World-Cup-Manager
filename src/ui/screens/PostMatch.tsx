@@ -1,17 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGame } from '../../store/gameStore'
 import { getTeam } from '../../data'
 import { StatRow, ratingColor } from '../components/common'
 import { generatePressConference, type PressOption, type PressQuestion } from '../../game/press'
+import { ReplayViewer } from '../../render/ReplayViewer'
+import type { GoalReplay } from '../../match/replay'
 import type { Side } from '../../engine/types'
 
 export default function PostMatch() {
-  const { userTeamId, lastResult } = useGame()
+  const { userTeamId, lastResult, lastReplays } = useGame()
   const setScreen = useGame((s) => s.setScreen)
   const applyPress = useGame((s) => s.applyPress)
   const nextFixture = useGame((s) => s.userFixture)()
   const [answers, setAnswers] = useState<Record<string, PressOption>>({})
   const [submitted, setSubmitted] = useState(false)
+  const [watching, setWatching] = useState<GoalReplay | null>(null)
 
   // redirect if there's no result (must not setState during render)
   useEffect(() => {
@@ -70,7 +73,7 @@ export default function PostMatch() {
       {/* Result hero */}
       <div className={`px-6 py-6 text-center ${won ? 'bg-accent-600/20' : drew ? 'bg-navy-800' : 'bg-danger-500/15'}`}>
         <div className="text-steel-400 text-xs font-bold uppercase">Full Time</div>
-        <div className="mt-2 flex items-center justify-center gap-5 text-3xl font-black">
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-3 text-xl font-black sm:gap-5 sm:text-3xl">
           <span>{home.flag} {home.name}</span>
           <span className="rounded-lg bg-navy-950 px-4 py-1">{r.homeScore} : {r.awayScore}</span>
           <span>{away.name} {away.flag}</span>
@@ -92,6 +95,27 @@ export default function PostMatch() {
           <StatRow label="Fouls" home={r.stats.fouls.home} away={r.stats.fouls.away} />
           <StatRow label="Yellow cards" home={r.stats.yellows.home} away={r.stats.yellows.away} />
           <StatRow label="Pass accuracy" home={passAcc(r, 'home')} away={passAcc(r, 'away')} />
+
+          {lastReplays.length > 0 && (
+            <div className="pt-2">
+              <h3 className="text-steel-400 mb-1 text-[11px] font-bold uppercase">Goal Replays</h3>
+              <div className="space-y-1">
+                {lastReplays.map((rep) => (
+                  <button
+                    key={rep.id}
+                    onClick={() => setWatching(rep)}
+                    className="flex w-full items-center gap-2 rounded-md border border-navy-600 px-2 py-1.5 text-left text-xs hover:bg-navy-700"
+                  >
+                    <span className="text-accent-400">⚽</span>
+                    <span className="flex-1 truncate">
+                      {rep.minute}' {rep.scorerName} <span className="text-steel-500">({rep.score.home}–{rep.score.away})</span>
+                    </span>
+                    <span className="text-steel-400 font-semibold">▶ Watch</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Ratings */}
@@ -138,6 +162,36 @@ export default function PostMatch() {
             )}
           </div>
         </div>
+      </div>
+
+      {watching && <ReplayModal replay={watching} onClose={() => setWatching(null)} />}
+    </div>
+  )
+}
+
+function ReplayModal({ replay, onClose }: { replay: GoalReplay; onClose: () => void }) {
+  const hostRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!hostRef.current) return
+    const viewer = new ReplayViewer(hostRef.current, replay)
+    const onResize = () => viewer.resize()
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      viewer.dispose()
+    }
+  }, [replay])
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/85 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="panel w-full max-w-3xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-navy-700 px-4 py-2">
+          <div className="text-sm font-bold">
+            ⚽ {replay.minute}' — {replay.scorerName}
+            <span className="text-steel-500 ml-2 font-normal">{replay.score.home}–{replay.score.away}</span>
+          </div>
+          <button className="btn-ghost px-3 py-1 text-xs" onClick={onClose}>✕ Close</button>
+        </div>
+        <div ref={hostRef} className="aspect-video w-full" />
       </div>
     </div>
   )

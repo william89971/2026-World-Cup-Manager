@@ -46,6 +46,9 @@ export function createWorld(setup: MatchSetup, kickoffSide: Side = 'home'): Worl
         ratingPoints: 0,
         goals: 0,
         assists: 0,
+        saves: 0,
+        joinedSec: 0,
+        offSec: null,
         kickCd: 0,
       })
     })
