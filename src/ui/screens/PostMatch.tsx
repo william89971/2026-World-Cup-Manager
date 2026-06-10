@@ -32,8 +32,9 @@ export default function PostMatch() {
   const userSide: Side = r && r.homeId === userTeamId ? 'home' : 'away'
   const userScore = r ? (userSide === 'home' ? r.homeScore : r.awayScore) : 0
   const oppScore = r ? (userSide === 'home' ? r.awayScore : r.homeScore) : 0
-  const won = !!r && userScore > oppScore
-  const drew = !!r && userScore === oppScore
+  // shootouts decide level knockout ties — never report those as draws
+  const won = !!r && (userScore > oppScore || (!!r.shootout && r.winnerId === userTeamId))
+  const drew = !!r && userScore === oppScore && !r.shootout
   const ratings = r ? [...r.ratings[userSide]].sort((a, b) => b.rating - a.rating) : []
   const played = ratings.filter((x) => x.minutes > 0)
 
