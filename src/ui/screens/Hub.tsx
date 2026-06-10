@@ -1,8 +1,11 @@
 import { useGame } from '../../store/gameStore'
 import { getTeam } from '../../data'
 import NavBar from '../components/NavBar'
+import ShareCardPanel from '../components/ShareCardPanel'
 import { MoraleBar } from '../components/common'
 import { groupStandings, isComplete, champion } from '../../game/tournament'
+import { renderTournamentCard } from '../../utils/shareCard'
+import { buildTournamentCardInput } from '../../utils/shareCardData'
 import { ROUND_LABEL } from '../../data/draw2026'
 import { availablePlayers } from '../../game/career'
 
@@ -23,6 +26,9 @@ export default function Hub() {
   const standings = groupStandings(tournament, team.group)
   const done = isComplete(tournament)
   const champ = champion(tournament)
+  // campaign over (won it, or eliminated with no fixture left) → share card
+  const userChampion = done && champ === userTeamId
+  const campaignOver = userChampion || (eliminated && !fixture)
 
   const opp =
     fixture && (fixture.homeId === userTeamId ? fixture.awayId : fixture.homeId)
@@ -138,6 +144,17 @@ export default function Hub() {
             </tbody>
           </table>
         </div>
+
+        {/* Campaign share card (elimination or trophy) */}
+        {campaignOver && (
+          <div className="panel p-5 lg:col-span-2">
+            <ShareCardPanel
+              render={() => renderTournamentCard(buildTournamentCardInput(tournament, career, userTeamId, userChampion))}
+              filename={userChampion ? 'world-champions.png' : 'tournament-run.png'}
+              title={userChampion ? '🏆 Share your triumph' : 'Share your campaign'}
+            />
+          </div>
+        )}
 
         {/* News feed */}
         <div className="panel flex max-h-[420px] flex-col p-5">

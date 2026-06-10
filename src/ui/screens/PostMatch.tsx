@@ -4,11 +4,15 @@ import { getTeam } from '../../data'
 import { StatRow, ratingColor } from '../components/common'
 import { generatePressConference, type PressOption, type PressQuestion } from '../../game/press'
 import { ReplayViewer } from '../../render/ReplayViewer'
+import ShareCardPanel from '../components/ShareCardPanel'
+import { renderMatchCard } from '../../utils/shareCard'
+import { buildMatchCardInput } from '../../utils/shareCardData'
+import { ROUND_LABEL } from '../../data/draw2026'
 import type { GoalReplay } from '../../match/replay'
 import type { Side } from '../../engine/types'
 
 export default function PostMatch() {
-  const { userTeamId, lastResult, lastReplays } = useGame()
+  const { userTeamId, lastResult, lastReplays, lastResultFixtureId, tournament } = useGame()
   const setScreen = useGame((s) => s.setScreen)
   const applyPress = useGame((s) => s.applyPress)
   const nextFixture = useGame((s) => s.userFixture)()
@@ -51,6 +55,12 @@ export default function PostMatch() {
   if (!r) return null
   const home = getTeam(r.homeId)
   const away = getTeam(r.awayId)
+  const fixture = tournament.fixtures.find((f) => f.id === lastResultFixtureId)
+  const occasion = fixture
+    ? fixture.round === 'GROUP'
+      ? `Group ${fixture.group} · Matchday ${fixture.matchday}`
+      : ROUND_LABEL[fixture.round]
+    : 'World Cup 2026'
 
   const allAnswered = questions.every((q) => answers[q.id])
 
@@ -161,6 +171,17 @@ export default function PostMatch() {
               </button>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Shareable result card */}
+      <div className="px-4 pb-6">
+        <div className="panel mx-auto max-w-xl p-4">
+          <ShareCardPanel
+            render={() => renderMatchCard(buildMatchCardInput(r, userTeamId, occasion))}
+            filename="match-result.png"
+            title="Share this result"
+          />
         </div>
       </div>
 
