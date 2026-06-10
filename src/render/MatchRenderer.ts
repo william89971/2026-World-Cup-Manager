@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import type { MatchSetup, PenaltyKickResult, Side, SimPlayer, WorldState } from '../engine/types'
 import type { ReplayFrame } from '../match/replay'
-import { PITCH } from '../engine/constants'
+import { PITCH, PLAYER } from '../engine/constants'
+import { resolveMatchKits, type ResolvedMatchKits } from '../utils/kitContrast'
 import { Stadium } from './entities/Stadium'
 import { Ball } from './entities/Ball'
 import { Humanoid } from './entities/Humanoid'
@@ -13,16 +14,6 @@ interface Figure {
   h: Humanoid
   facing: number
   prevKickCd: number
-}
-
-/** Perceptual-ish distance between two hex colours (kit clash check). */
-function colorDistance(a: string, b: string): number {
-  const pa = parseInt(a.replace('#', ''), 16)
-  const pb = parseInt(b.replace('#', ''), 16)
-  const dr = ((pa >> 16) & 255) - ((pb >> 16) & 255)
-  const dg = ((pa >> 8) & 255) - ((pb >> 8) & 255)
-  const db = (pa & 255) - (pb & 255)
-  return Math.sqrt(dr * dr * 2 + dg * dg * 4 + db * db)
 }
 
 /** Stable small hash for per-team badge variants. */
@@ -80,8 +71,8 @@ export class MatchRenderer {
   private shootoutStage = false
   private penalty: PenaltySeq | null = null
   private standSpots = new Map<string, { x: number; z: number }>()
-  /** Away side wears its second kit when the primaries clash. */
-  private awaySecondKit: boolean
+  /** Contrast-guaranteed colours both teams actually wear. */
+  readonly kits: ResolvedMatchKits
   private shotLive = false
   readonly weather: Weather
 
@@ -120,7 +111,7 @@ export class MatchRenderer {
     this.scene.add(this.stadium.group)
     this.scene.add(this.ball.group)
 
-    this.awaySecondKit = colorDistance(setup.home.kit.primary, setup.away.kit.primary) < 130
+    this.kits = resolveMatchKits(setup.home.kit, setup.away.kit)
 
     if (this.weather === 'rain') this.buildRain()
 
@@ -161,27 +152,39 @@ export class MatchRenderer {
     attr.needsUpdate = true
   }
 
-  private kitFor(side: Side, role: string): { shirt: string; shorts: string; sock: string; badgeAccent: string; badgeSeed: number } {
+  private kitFor(side: Side, role: string): { shirt: string; shorts: string; sock: string; badgeAccent: string; badgeSeed: number; ring: string } {
     const team = side === 'home' ? this.setup.home : this.setup.away
-    const kit = team.kit
+    const resolved = side === 'home' ? this.kits.home : this.kits.away
     const seed = teamSeed(team.teamId)
-    if (role === 'GK')
-      return { shirt: kit.goalkeeper, shorts: kit.goalkeeper, sock: kit.goalkeeper, badgeAccent: kit.primary, badgeSeed: seed }
-    // away changes into its second kit when the primaries are too similar
-    const shirt = side === 'away' && this.awaySecondKit ? kit.secondary : kit.primary
-    const shorts = side === 'away' && this.awaySecondKit ? kit.primary : kit.secondary
-    return { shirt, shorts, sock: shirt, badgeAccent: shorts, badgeSeed: seed }
+    if (role === 'GK') {
+      const gk = side === 'home' ? this.kits.homeGk : this.kits.awayGk
+      return { shirt: gk, shorts: gk, sock: gk, badgeAccent: resolved.shirt, badgeSeed: seed, ring: resolved.shirt }
+    }
+    return {
+      shirt: resolved.shirt,
+      shorts: resolved.shorts,
+      sock: resolved.shirt,
+      badgeAccent: resolved.shorts,
+      badgeSeed: seed,
+      ring: resolved.shirt,
+    }
   }
 
   private ensure(p: SimPlayer): Figure {
     let f = this.figures.get(p.id)
     if (!f) {
       const h = new Humanoid(this.kitFor(p.side, p.role), p.number)
+      h.group.scale.setScalar(1.2) // readable at broadcast distance
       this.scene.add(h.group)
       f = { h, facing: p.side === 'home' ? 0 : Math.PI, prevKickCd: 0 }
       this.figures.set(p.id, f)
     }
     return f
+  }
+
+  /** Subtle impact shake (shots / tackles). */
+  shakeCamera(amp = 0.25) {
+    this.cam.shake(amp)
   }
 
   /** Slide-tackle animation on the named player (driven by engine events). */
@@ -437,6 +440,10 @@ export class MatchRenderer {
       fig.prevKickCd = p.kickCd
       // arms aloft for the scoring side while the celebration plays
       fig.h.setCelebrating(celebrating && !!scorer && p.side === scorer.side && p.role !== 'GK')
+      // sprint chevrons mark off-ball runs so the manager can read intent
+      fig.h.setRunIndicator(
+        !celebrating && p.id !== world.ball.ownerId && speed > PLAYER.BASE_SPEED * 1.12,
+      )
       fig.h.update(speed, fig.facing, dt)
     }
 

@@ -1,4 +1,4 @@
-import { BALL, PITCH, PLAYER } from '../constants'
+import { BALL, PACE, PITCH, PLAYER } from '../constants'
 import type { MatchEvent, MatchSetup, SimPlayer, Vec2, WorldState } from '../types'
 import { attackDir, byId, onPitch, other, targetGoalY } from './world'
 import { clamp, dist, gauss, len, norm, scale, sub, v } from '../util'
@@ -85,12 +85,14 @@ export function decideOnBall(
   }
 
   // ── shot quality ─────────────────────────────────────────────
-  const distFactor = clamp01(1 - (d2goal - 6) / 26)
+  const distFactor = clamp01(1 - (d2goal - 6) / 30)
   const q = clamp01((effShooting / 99) * distFactor * (0.45 + 0.55 * central) * (1 - 0.35 * pressFactor))
   // elite finishers (85+) back themselves from range
   const longRange = owner.attrs.shooting >= 85 ? 4.5 : 0
-  const shootRange = 13 + owner.attrs.shooting * 0.11 + longRange
-  let shootProb = 0.0025 + q * 0.037
+  const shootRange = 16 + owner.attrs.shooting * 0.11 + longRange
+  // per-decision shot appetite, scaled up because decisions are PACE-dilated
+  // (one thought per touch instead of several)
+  let shootProb = 0.05 + q * 0.55
   if (owner.attrs.shooting >= 85) shootProb *= 1.35
   if (ctx.desperate) shootProb *= 1.9 // chasing the game: shoot on sight
   if (ctx.protecting) shootProb *= 0.45 // killing the game: keep it safe
@@ -104,7 +106,7 @@ export function decideOnBall(
   // ── cross from wide advanced areas ───────────────────────────
   const advanced = owner.pos.y * dir > PITCH.HALF_L - 28
   const wide = Math.abs(owner.pos.x) > 19
-  if (advanced && wide && rng() < 0.5) {
+  if (advanced && wide && rng() < 0.7) {
     const crossed = cross(world, owner, rng, emit)
     if (crossed) return null
   }
@@ -144,9 +146,9 @@ function shoot(
   const gkRating = gk?.overall ?? 70
   // momentum sways composure in front of goal (±8%)
   const momScale = 1 + (world.momentum[shooter.side] - 50) * 0.0016
-  const onTargetProb = clamp01((0.38 + q * 0.35) * momScale)
+  const onTargetProb = clamp01((0.42 + q * 0.35) * momScale)
   const onTarget = rng() < onTargetProb
-  const pGoal = clamp01(q * 0.78 * (shooter.attrs.shooting / (shooter.attrs.shooting + gkRating * 0.95)))
+  const pGoal = clamp01(q * 1.15 * (shooter.attrs.shooting / (shooter.attrs.shooting + gkRating * 0.95)))
   const isGoal = onTarget && rng() < pGoal
   const outcome: 'goal' | 'save' | 'off' = isGoal ? 'goal' : onTarget ? 'save' : 'off'
 
@@ -168,7 +170,7 @@ function shoot(
   const aim = v(aimX, goal.y)
   const dirVec = norm(sub(aim, shooter.pos))
   const speed = BALL.MAX_SHOT_SPEED * (0.72 + rng() * 0.28)
-  const flightTime = Math.max(0.4, dist(shooter.pos, aim) / speed)
+  const flightTime = Math.max(0.4 / PACE, dist(shooter.pos, aim) / speed)
 
   world.ball.ownerId = null
   world.ball.inFlight = true
@@ -180,7 +182,7 @@ function shoot(
   world.ball.targetReceiverId = null
   world.ball.vel = scale(dirVec, speed)
   world.ball.vz = (aimZ - world.ball.z) / flightTime + 0.5 * BALL.GRAVITY * flightTime
-  shooter.kickCd = 6
+  shooter.kickCd = 20
 
   world.stats.shots[shooter.side]++
   if (outcome !== 'off') world.stats.onTarget[shooter.side]++
@@ -207,10 +209,11 @@ interface PassOption {
 function bestPass(world: WorldState, owner: SimPlayer, dir: number, ctx?: GameCtx): PassOption | null {
   let best: PassOption | null = null
   // elite passers value the forward/killer ball; target men lay off to feet;
-  // a counter-attack demands the direct ball
-  let fwdWeight = 0.5 + (owner.attrs.passing >= 85 ? 0.25 : 0)
-  if (owner.archetype === 'targetman') fwdWeight = 0.25
-  if (ctx?.countering) fwdWeight += 0.35
+  // a counter-attack demands the direct ball. Forward progress is weighted
+  // strongly so slower touches don't degenerate into sterile circulation.
+  let fwdWeight = 0.8 + (owner.attrs.passing >= 85 ? 0.25 : 0)
+  if (owner.archetype === 'targetman') fwdWeight = 0.4
+  if (ctx?.countering) fwdWeight += 0.4
   for (const mate of onPitch(world, owner.side)) {
     if (mate.id === owner.id) continue
     const passDist = dist(owner.pos, mate.pos)
@@ -221,10 +224,10 @@ function bestPass(world: WorldState, owner: SimPlayer, dir: number, ctx?: GameCt
       const dd = dist(o.pos, mate.pos)
       if (dd < openness) openness = dd
     }
-    openness = Math.min(openness, 15)
+    openness = Math.min(openness, 12)
     let score =
       forwardGain * fwdWeight +
-      openness * 0.95 -
+      openness * 0.8 -
       passDist * 0.28 +
       (mate.role === 'GK' ? -8 : 0)
     // through-balls: reward releasing a rapid runner already moving forward
@@ -258,7 +261,7 @@ function executePass(
   const effPassing = owner.attrs.passing * (ctx?.fatigue ?? 1)
   const errSd = ((1 - effPassing / 99) * 0.12 + d * 0.001) * (1 - (ctx?.mom ?? 0) * 0.002)
   const ang = Math.atan2(toTarget.y, toTarget.x) + gauss(rng, 0, errSd)
-  const speed = clamp(d / 1.05, 7, BALL.MAX_PASS_SPEED)
+  const speed = clamp((d / 1.05) * PACE, 7 * PACE, BALL.MAX_PASS_SPEED)
   world.ball.ownerId = null
   world.ball.inFlight = true
   world.ball.shotOutcome = null
@@ -268,9 +271,9 @@ function executePass(
   world.ball.passTarget = { ...target }
   world.ball.targetReceiverId = receiverId
   world.ball.vel = v(Math.cos(ang) * speed, Math.sin(ang) * speed)
-  world.ball.vz = lofted ? 3.2 : 0
+  world.ball.vz = lofted ? 3.2 * PACE : 0
   // time-wasting sides take their time over every restart of play
-  owner.kickCd = ctx?.protecting ? 6 : 3
+  owner.kickCd = ctx?.protecting ? 20 : 10
   world.stats.passesAttempted[owner.side]++
   owner.ratingPoints += 0.003
 }
@@ -290,7 +293,7 @@ function cross(world: WorldState, owner: SimPlayer, rng: () => number, emit: Emi
   const aim = { x: target.pos.x + gauss(rng, 0, 3), y: target.pos.y }
   const toAim = sub(aim, owner.pos)
   const d = len(toAim)
-  const speed = clamp(d / 0.8, 10, BALL.MAX_PASS_SPEED)
+  const speed = clamp((d / 0.8) * PACE, 10 * PACE, BALL.MAX_PASS_SPEED)
   world.ball.ownerId = null
   world.ball.inFlight = true
   world.ball.shotOutcome = null
@@ -300,8 +303,8 @@ function cross(world: WorldState, owner: SimPlayer, rng: () => number, emit: Emi
   world.ball.passTarget = { ...aim }
   world.ball.targetReceiverId = target.id
   world.ball.vel = scale(norm(toAim), speed)
-  world.ball.vz = 4.5
-  owner.kickCd = 3
+  world.ball.vz = 4.5 * PACE
+  owner.kickCd = 10
   world.stats.passesAttempted[owner.side]++
   emit({ type: 'shot', side: owner.side, playerId: owner.id, playerName: owner.name, text: `${owner.name} crosses`, pos: { ...owner.pos } })
   return true
@@ -319,8 +322,8 @@ function clearBall(world: WorldState, owner: SimPlayer, dir: number, rng: () => 
   world.ball.passTarget = null
   world.ball.targetReceiverId = null
   world.ball.vel = scale(norm(toAim), BALL.MAX_PASS_SPEED)
-  world.ball.vz = 5
-  owner.kickCd = 4
+  world.ball.vz = 5 * PACE
+  owner.kickCd = 13
   emit({ type: 'interception', side: owner.side, playerId: owner.id, playerName: owner.name, text: `${owner.name} clears`, pos: { ...owner.pos } })
 }
 

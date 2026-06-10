@@ -6,6 +6,7 @@ import type { MatchEvent, Side, SimPlayer, WorldState } from '../../engine/types
 import { PITCH } from '../../engine/constants'
 import { StatRow } from '../components/common'
 import { commentaryFor, TACTICAL_LINES } from '../../data/commentary'
+import { resolveMatchKits } from '../../utils/kitContrast'
 import PauseMenu from '../components/PauseMenu'
 
 interface Hud {
@@ -88,13 +89,15 @@ export default function Match() {
       return
     }
     sideRef.current = setup.home.teamId === userTeamId ? 'home' : 'away'
+    // use the contrast-resolved on-pitch colours so HUD/minimap match the 3D kits
+    const kits = resolveMatchKits(setup.home.kit, setup.away.kit)
     namesRef.current = {
       hf: getTeam(setup.home.teamId).flag,
       af: getTeam(setup.away.teamId).flag,
       hn: setup.home.teamId,
       an: setup.away.teamId,
-      hc: setup.home.kit.primary,
-      ac: setup.away.kit.primary,
+      hc: kits.home.shirt,
+      ac: kits.away.shirt,
     }
     const homeName = getTeam(setup.home.teamId).name
     const awayName = getTeam(setup.away.teamId).name
@@ -550,20 +553,28 @@ function MiniMap({ dots, ball }: { dots: { x: number; y: number; c: string }[]; 
     ctx.stroke()
     const mx = (x: number) => ((x + PITCH.HALF_W) / PITCH.W) * (W - 4) + 2
     const my = (y: number) => ((y + PITCH.HALF_L) / PITCH.L) * (H - 4) + 2
+    // players: large team-coloured dots with a dark outline for separation
     for (const d of dots) {
       ctx.fillStyle = d.c
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)'
+      ctx.lineWidth = 1
       ctx.beginPath()
-      ctx.arc(mx(d.x), my(d.y), 2.6, 0, Math.PI * 2)
+      ctx.arc(mx(d.x), my(d.y), 4, 0, Math.PI * 2)
       ctx.fill()
+      ctx.stroke()
     }
-    ctx.fillStyle = '#fff'
+    // ball: the brightest, biggest mark on the map
+    ctx.fillStyle = '#ffffff'
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)'
+    ctx.lineWidth = 1.5
     ctx.beginPath()
-    ctx.arc(mx(ball.x), my(ball.y), 1.8, 0, Math.PI * 2)
+    ctx.arc(mx(ball.x), my(ball.y), 5.5, 0, Math.PI * 2)
     ctx.fill()
+    ctx.stroke()
   }, [dots, ball])
   return (
     <div className="absolute right-3 top-3 rounded-xl border border-navy-700 bg-navy-950/80 p-1.5 backdrop-blur">
-      <canvas ref={ref} width={104} height={150} className="rounded" />
+      <canvas ref={ref} width={128} height={186} className="rounded" />
     </div>
   )
 }

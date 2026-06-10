@@ -248,7 +248,13 @@ export class MatchController {
         // big occasions: the crowd does a full stadium wave before kick-off
         if (ev.type === 'kickoff' && this.sim.setup.occasion?.wave) this.renderer.stadiumWave()
       }
-      if (ev.type === 'tackle') this.renderer.triggerTackle(ev.playerId)
+      if (ev.type === 'tackle') {
+        this.renderer.triggerTackle(ev.playerId)
+        if (this.speed === 1) this.renderer.shakeCamera(0.12)
+      }
+      if ((ev.type === 'shot' || ev.type === 'bigchance') && this.speed === 1) {
+        this.renderer.shakeCamera(0.22)
+      }
       if (ev.type === 'goal' && ev.pos) {
         this.renderer.cutTo(ev.pos.x, ev.pos.y)
         // bank the last ~8 seconds and queue the cinematic replay

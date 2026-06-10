@@ -14,7 +14,28 @@ const G = {
   numberPlate: new THREE.PlaneGeometry(0.4, 0.42),
   badge: new THREE.PlaneGeometry(0.11, 0.13),
   shadow: new THREE.CircleGeometry(0.42, 20),
+  ring: new THREE.RingGeometry(0.42, 0.56, 24),
+  runArrow: new THREE.PlaneGeometry(0.5, 0.9),
 }
+
+// chevron texture for the off-ball run indicator
+const ARROW_TEX = (() => {
+  const cv = document.createElement('canvas')
+  cv.width = 32
+  cv.height = 56
+  const ctx = cv.getContext('2d')!
+  ctx.fillStyle = '#ffffff'
+  for (const y of [0, 20]) {
+    ctx.beginPath()
+    ctx.moveTo(2, y + 22)
+    ctx.lineTo(16, y + 6)
+    ctx.lineTo(30, y + 22)
+    ctx.lineTo(16, y + 14)
+    ctx.closePath()
+    ctx.fill()
+  }
+  return new THREE.CanvasTexture(cv)
+})()
 
 const SKIN = new THREE.MeshStandardMaterial({ color: 0xc89a73, roughness: 0.85 })
 const BOOT = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 })
@@ -105,6 +126,8 @@ export interface HumanoidColors {
   /** Badge accent colour + per-team seed for a distinct chest crest. */
   badgeAccent?: string
   badgeSeed?: number
+  /** Team-colour identification ring under the feet. */
+  ring?: string
 }
 
 /** A jointed footballer with run/kick/idle/celebrate/dive/tackle states,
@@ -127,6 +150,8 @@ export class Humanoid {
   private celebrating = false
   private facing = 0
   private disposables: THREE.Texture[] = []
+  private runArrow: THREE.Mesh | null = null
+  private runArrowAlpha = 0
 
   constructor(colors: HumanoidColors, number?: number) {
     const shirt = new THREE.MeshStandardMaterial({ color: new THREE.Color(colors.shirt), roughness: 0.7 })
@@ -187,6 +212,31 @@ export class Humanoid {
     blob.rotation.x = -Math.PI / 2
     blob.position.y = 0.015
     this.group.add(blob)
+
+    // team-colour ring so players stay identifiable even when overlapping
+    if (colors.ring) {
+      const ring = new THREE.Mesh(
+        G.ring,
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(colors.ring), transparent: true, opacity: 0.85, depthWrite: false }),
+      )
+      ring.rotation.x = -Math.PI / 2
+      ring.position.y = 0.03
+      this.group.add(ring)
+
+      // off-ball run chevrons (ahead of the player, shown while sprinting)
+      this.runArrow = new THREE.Mesh(
+        G.runArrow,
+        new THREE.MeshBasicMaterial({ map: ARROW_TEX, color: new THREE.Color(colors.ring), transparent: true, opacity: 0, depthWrite: false }),
+      )
+      this.runArrow.rotation.x = -Math.PI / 2
+      this.runArrow.position.set(0, 0.04, 1.1)
+      this.group.add(this.runArrow)
+    }
+  }
+
+  /** Show/hide the sprint chevrons (faded in update for a soft pulse). */
+  setRunIndicator(on: boolean) {
+    this.runArrowAlpha = on ? 1 : 0
   }
 
   private buildLimb(
@@ -241,6 +291,12 @@ export class Humanoid {
   /** @param speed metres/sec   @param facing radians (y-rotation)   @param dt seconds */
   update(speed: number, facing: number, dt: number) {
     this.time += dt
+    // run indicator fade
+    if (this.runArrow) {
+      const mat = this.runArrow.material as THREE.MeshBasicMaterial
+      const target = this.runArrowAlpha * (0.55 + Math.sin(this.time * 9) * 0.2)
+      mat.opacity += (target - mat.opacity) * Math.min(1, dt * 8)
+    }
     // smoothly turn toward heading
     let diff = facing - this.facing
     while (diff > Math.PI) diff -= Math.PI * 2

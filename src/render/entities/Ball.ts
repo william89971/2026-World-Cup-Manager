@@ -55,28 +55,59 @@ function ballTexture(): THREE.CanvasTexture {
 }
 
 const TRAIL_LEN = 9
+/** Oversized for readability — the ball must be the most prominent object. */
+const RADIUS = 0.36
 
 export class Ball {
   readonly mesh: THREE.Mesh
-  /** Parent for the ball + its motion-blur trail. Add this to the scene. */
+  /** Parent for the ball + its glow, ground shadow and trail. */
   readonly group = new THREE.Group()
-  private target = new THREE.Vector3(0, 0.12, 0)
+  private target = new THREE.Vector3(0, RADIUS, 0)
   private trail: THREE.Mesh[] = []
   private history: THREE.Vector3[] = []
   private lastPos = new THREE.Vector3()
+  private shadow: THREE.Mesh
+  private glow: THREE.PointLight
 
   constructor() {
     const tex = ballTexture()
     this.mesh = new THREE.Mesh(
-      new THREE.SphereGeometry(0.12, 20, 14),
-      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.35 }),
+      new THREE.SphereGeometry(RADIUS, 24, 18),
+      new THREE.MeshStandardMaterial({
+        map: tex,
+        roughness: 0.3,
+        emissive: 0xffffff,
+        emissiveMap: tex,
+        emissiveIntensity: 0.38, // self-lit so it reads in any weather
+      }),
     )
     this.mesh.castShadow = true
     this.mesh.position.copy(this.target)
     this.group.add(this.mesh)
 
+    // soft white glow travelling with the ball
+    this.glow = new THREE.PointLight(0xffffff, 6, 9, 2)
+    this.group.add(this.glow)
+
+    // bold contact shadow so the ball's pitch position is always readable
+    const cv = document.createElement('canvas')
+    cv.width = cv.height = 64
+    const ctx = cv.getContext('2d')!
+    const grad = ctx.createRadialGradient(32, 32, 4, 32, 32, 32)
+    grad.addColorStop(0, 'rgba(0,0,0,0.6)')
+    grad.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, 64, 64)
+    this.shadow = new THREE.Mesh(
+      new THREE.CircleGeometry(0.55, 24),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false }),
+    )
+    this.shadow.rotation.x = -Math.PI / 2
+    this.shadow.position.y = 0.02
+    this.group.add(this.shadow)
+
     // motion-blur trail: fading ghost spheres shown only on fast shots
-    const trailGeo = new THREE.SphereGeometry(0.1, 8, 6)
+    const trailGeo = new THREE.SphereGeometry(RADIUS * 0.8, 8, 6)
     for (let i = 0; i < TRAIL_LEN; i++) {
       const m = new THREE.Mesh(
         trailGeo,
@@ -95,19 +126,24 @@ export class Ball {
 
   /** @param x,z ground position (metres)  @param height ball height (metres) */
   update(x: number, z: number, height: number, dt: number) {
-    this.target.set(x, Math.max(0.12, height + 0.12), z)
+    this.target.set(x, Math.max(RADIUS, height + RADIUS), z)
     this.mesh.position.lerp(this.target, Math.min(1, dt * 22))
+    this.glow.position.set(this.mesh.position.x, this.mesh.position.y + 0.4, this.mesh.position.z)
+    this.shadow.position.set(this.mesh.position.x, 0.02, this.mesh.position.z)
+    // shadow shrinks slightly as the ball rises
+    const air = Math.min(1, Math.max(0, this.mesh.position.y - RADIUS) / 4)
+    this.shadow.scale.setScalar(1 - air * 0.4)
 
     // spin for a sense of motion
-    this.mesh.rotation.x += dt * 6
-    this.mesh.rotation.y += dt * 4
+    this.mesh.rotation.x += dt * 4
+    this.mesh.rotation.y += dt * 2.5
 
     // trail history + visibility based on speed
     const speed = dt > 0 ? this.mesh.position.distanceTo(this.lastPos) / dt : 0
     this.lastPos.copy(this.mesh.position)
     this.history.unshift(this.mesh.position.clone())
     if (this.history.length > TRAIL_LEN * 2) this.history.pop()
-    const fast = speed > 14
+    const fast = speed > 7
     this.trail.forEach((m, i) => {
       const h = this.history[(i + 1) * 2]
       m.visible = fast && !!h

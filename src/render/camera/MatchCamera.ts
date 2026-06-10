@@ -42,10 +42,13 @@ export class MatchCamera {
   private cutPos = new THREE.Vector3()
   private pan = 0
   private panDur = 0
+  private shakeT = 0
+  private shakeAmp = 0
 
   constructor(aspect: number, dom: HTMLElement) {
-    this.camera = new THREE.PerspectiveCamera(52, aspect, 0.5, 600)
-    this.camera.position.set(0, 38, 58)
+    // wide broadcast FOV so most of the pitch stays in frame
+    this.camera = new THREE.PerspectiveCamera(63, aspect, 0.5, 600)
+    this.camera.position.set(0, 18, 30)
     this.pos.snap(this.camera.position)
     this.controls = new OrbitControls(this.camera, dom)
     this.controls.enableDamping = true
@@ -78,6 +81,12 @@ export class MatchCamera {
   cinematicPan(seconds = 3.5) {
     this.pan = seconds
     this.panDur = seconds
+  }
+
+  /** Very subtle impact shake (shots, tackles). */
+  shake(amp = 0.25) {
+    this.shakeT = 0.1
+    this.shakeAmp = amp
   }
 
   /** Smoothly frame an arbitrary position/look-at (shootout staging etc). */
@@ -120,20 +129,28 @@ export class MatchCamera {
 
     const focusX = this.cut > 0 ? this.cutPos.x : ballX
     const focusZ = this.cut > 0 ? this.cutPos.z : ballZ
-    this.look.to(new THREE.Vector3(focusX, 1, focusZ), 0.35, dt)
+    // the look-at lags the ball so fast passes don't whip the frame
+    this.look.to(new THREE.Vector3(focusX, 1, focusZ), 0.6, dt)
 
     if (this.cut > 0) {
       this.cut -= dt
       // low, close cinematic angle
-      this.desired.set(focusX * 0.6, 9, focusZ + 16)
+      this.desired.set(focusX * 0.6, 8, focusZ + 14)
     } else if (this.mode === 'broadcast') {
-      this.desired.set(0, 46 * this.zoom, 70 * this.zoom)
+      this.desired.set(0, 34 * this.zoom, 52 * this.zoom)
     } else {
-      // follow: trail the ball from a raised angle
-      this.desired.set(focusX * 0.5, 30 * this.zoom, focusZ + 42 * this.zoom)
+      // follow: ~33° broadcast angle, sitting back toward the halfway line
+      // rather than directly over the ball (focusZ * 0.55 biases it central)
+      this.desired.set(focusX * 0.42, 22 * this.zoom, focusZ * 0.55 + 33 * this.zoom)
     }
-    this.pos.to(this.desired, 0.45, dt)
+    this.pos.to(this.desired, 0.85, dt)
     this.camera.position.copy(this.pos.value)
+    if (this.shakeT > 0) {
+      this.shakeT -= dt
+      const k = Math.max(0, this.shakeT / 0.1) * this.shakeAmp
+      this.camera.position.x += (Math.random() - 0.5) * k
+      this.camera.position.y += (Math.random() - 0.5) * k
+    }
     this.camera.lookAt(this.look.value)
   }
 

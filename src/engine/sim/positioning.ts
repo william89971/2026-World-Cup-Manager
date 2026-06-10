@@ -106,7 +106,8 @@ export function computeTargets(world: WorldState, setup: MatchSetup): Map<string
   const owner = byId(world, world.ball.ownerId)
   const ball = world.ball.pos
   // predicted ball position used by receivers / pressers chasing a loose ball
-  const predicted = v(ball.x + world.ball.vel.x * 0.25, ball.y + world.ball.vel.y * 0.25)
+  // (the lead window stretches with the dilated ball speed)
+  const predicted = v(ball.x + world.ball.vel.x * 0.8, ball.y + world.ball.vel.y * 0.8)
   const loose = !owner
   // side "in possession": the carrier's side, or the last team to touch a ball in flight
   const attackingSide: Side | null = owner ? owner.side : world.ball.inFlight ? world.ball.lastTouch : null
@@ -248,9 +249,10 @@ function shapedTarget(
   let tx = p.anchor.x * ctx.width
   let ty = p.anchor.y
 
-  // whole-block follow toward the ball (compactness)
-  ty += (ball.y - p.anchor.y) * 0.22
-  tx += (ball.x - p.anchor.x) * 0.12
+  // whole-block follow toward the ball — loose enough that the team still
+  // spans most of the pitch instead of bunching around the ball
+  ty += (ball.y - p.anchor.y) * 0.14
+  tx += (ball.x - p.anchor.x) * 0.08
 
   // attack push when in possession, drop when defending — scaled by game state
   ty += inPoss ? dir * MENTALITY_PUSH[tac.mentality] * ctx.push : -dir * MENTALITY_DROP[tac.mentality] * ctx.drop
@@ -353,6 +355,11 @@ function shapedTarget(
 function celebrateTargets(world: WorldState, out: Map<string, Vec2>): void {
   const scorer = byId(world, world.lastScorerId)
   if (!scorer) return
+  // first beat after the goal: everyone freezes and lets the moment land
+  if (world.tick < world.celebrateUntil - 70) {
+    for (const p of onPitch(world)) out.set(p.id, { ...p.pos })
+    return
+  }
   const dir = attackDir(scorer.side)
   // scorer wheels away toward the corner flag
   const corner = v(Math.sign(scorer.pos.x || 1) * (PITCH.HALF_W - 3), targetGoalY(scorer.side) - dir * 6)

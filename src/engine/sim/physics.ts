@@ -1,4 +1,4 @@
-import { BALL, PITCH, PLAYER, TICK_DT } from '../constants'
+import { BALL, PACE, PITCH, PLAYER, TICK_DT } from '../constants'
 import type { MatchSetup, Side, SimPlayer, Vec2, WorldState } from '../types'
 import { attackDir, byId, nearestPlayer, onPitch, other, ownGoalY, shiftMomentum } from './world'
 import type { EmitFn } from './decision'
@@ -13,7 +13,7 @@ function openTransition(world: WorldState, side: Side): void {
   const ahead = onPitch(world, side).filter(
     (p) => p.role !== 'GK' && (p.pos.y - ballY) * dir > 3,
   ).length
-  world.transition = { side, untilTick: world.tick + 30, counter: ahead >= 2 }
+  world.transition = { side, untilTick: world.tick + 100, counter: ahead >= 2 }
   // winning the ball back in the opposition half = a successful press
   if (ballY * dir > 0) shiftMomentum(world, side, 3)
 }
@@ -47,7 +47,7 @@ export function stepBall(world: WorldState, setup: MatchSetup, rng: () => number
     if (ball.z <= 0) {
       ball.z = 0
       ball.vz = -ball.vz * BALL.BOUNCE
-      if (Math.abs(ball.vz) < 1) ball.vz = 0
+      if (Math.abs(ball.vz) < 1 * PACE) ball.vz = 0
       ball.vel = scale(ball.vel, 0.7) // grip on bounce
     }
   }
@@ -56,7 +56,7 @@ export function stepBall(world: WorldState, setup: MatchSetup, rng: () => number
   ball.vel = scale(ball.vel, decay)
 
   if (resolveBounds(world, setup, emit)) return
-  tryControl(world, emit)
+  tryControl(world, rng, emit)
 
   // ── stuck-ball watchdog ──────────────────────────────────────
   // A loose, near-stationary ball that nobody collects for ~3s (or a NaN'd
@@ -68,9 +68,9 @@ export function stepBall(world: WorldState, setup: MatchSetup, rng: () => number
     ball.vz = 0
     ball.inFlight = false
   }
-  if (!ball.ownerId && world.phase === 'open' && Math.hypot(ball.vel.x, ball.vel.y) < 0.5 && ball.z < 0.3) {
+  if (!ball.ownerId && world.phase === 'open' && Math.hypot(ball.vel.x, ball.vel.y) < 0.5 * PACE && ball.z < 0.3) {
     ball.idleTicks = (ball.idleTicks ?? 0) + 1
-    if (ball.idleTicks > 30) {
+    if (ball.idleTicks > 100) {
       const taker = nearestPlayer(world, ball.pos)
       if (taker) {
         ball.ownerId = taker.id
@@ -155,12 +155,13 @@ function scoreGoal(world: WorldState, side: Side, emit: EmitFn): void {
 
   resetBall(world)
   world.phase = 'celebrate'
-  world.celebrateUntil = world.tick + 25
+  // ~1.5 real seconds of frozen disbelief, then the celebration run
+  world.celebrateUntil = world.tick + 220
   world.ball.shotOutcome = null
   world.ball.inFlight = false
   world.ball.ownerId = null
   // kickoff goes to the conceding side
-  world.restart = { type: 'kickoff', side, pos: v(0, 0), delay: 25 }
+  world.restart = { type: 'kickoff', side, pos: v(0, 0), delay: 30 }
 }
 
 function keeperSave(world: WorldState, defendingSide: Side, emit: EmitFn): void {
@@ -179,7 +180,7 @@ function keeperSave(world: WorldState, defendingSide: Side, emit: EmitFn): void 
 const RECEIVE_R = PLAYER.CONTROL_RADIUS * 2.2 // intended receiver's trap radius
 const INTERCEPT_R = PLAYER.CONTROL_RADIUS * 0.9 // tight lane interception
 const LOOSE_R = PLAYER.CONTROL_RADIUS * 1.15 // collecting a slow loose ball
-const FAST = 6 // m/s above which a pass is "in flight"
+const FAST = 6 * PACE // m/s above which a pass is "in flight"
 
 function eligible(world: WorldState, point: Vec2, side?: Side): { p: SimPlayer; d: number } | undefined {
   let best: SimPlayer | undefined
@@ -192,7 +193,7 @@ function eligible(world: WorldState, point: Vec2, side?: Side): { p: SimPlayer; 
   return best ? { p: best, d: bestD } : undefined
 }
 
-function tryControl(world: WorldState, emit: EmitFn): void {
+function tryControl(world: WorldState, rng: () => number, emit: EmitFn): void {
   const ball = world.ball
   if (ball.z > 2) return
   const passSide: Side | null = byId(world, ball.lastPasserId)?.side ?? ball.lastTouch
@@ -203,11 +204,13 @@ function tryControl(world: WorldState, emit: EmitFn): void {
   let intercepted = false
 
   if (fast) {
-    // a defender in the lane can make a tight interception first…
+    // a defender in the lane can make a tight interception first — sampled
+    // probabilistically per tick because the dilated ball crosses his window
+    // over several ticks instead of skipping past in one
     const def = passSide ? eligible(world, ball.pos, other(passSide)) : undefined
     const receiver = byId(world, ball.targetReceiverId)
     const reachedTarget = ball.passTarget ? dist(ball.pos, ball.passTarget) <= 2.5 : false
-    if (def && def.d <= INTERCEPT_R) {
+    if (def && def.d <= INTERCEPT_R && rng() < 0.2) {
       controller = def.p
       intercepted = true
     } else if (receiver && receiver.kickCd === 0 && receiver.side === passSide) {
@@ -241,6 +244,9 @@ function tryControl(world: WorldState, emit: EmitFn): void {
   ball.vel = v(0, 0)
   ball.vz = 0
   ball.z = 0
+  // a controlling touch: the receiver takes a beat before he can release the
+  // ball again — this is what gives play its rhythm
+  controller.kickCd = Math.max(controller.kickCd, PLAYER.CONTROL_TICKS)
 
   if (wasInFlight && fromPasser) {
     if (!intercepted && controller.side === fromPasser.side) {
@@ -259,7 +265,8 @@ function tryTackle(world: WorldState, setup: MatchSetup, owner: SimPlayer, rng: 
   for (const opp of onPitch(world, other(owner.side))) {
     if (dist(opp.pos, owner.pos) > PLAYER.REACH) continue
     const ratio = opp.attrs.defending / (opp.attrs.defending + owner.attrs.dribbling)
-    if (rng() < 0.04 * (0.6 + ratio)) {
+    // per-tick engage rate is PACE-dilated: duels last the same share of play
+    if (rng() < 0.026 * (0.6 + ratio)) {
       // tackle engaged — dribblers ride challenges and draw more fouls
       const cleanProb = owner.archetype === 'dribbler' ? 0.84 : 0.9
       if (rng() < cleanProb) {
@@ -267,6 +274,7 @@ function tryTackle(world: WorldState, setup: MatchSetup, owner: SimPlayer, rng: 
         world.ball.ownerId = opp.id
         world.ball.lastTouch = opp.side
         world.ball.lastPasserId = null
+        opp.kickCd = Math.max(opp.kickCd, PLAYER.CONTROL_TICKS)
         opp.ratingPoints += 0.04
         owner.ratingPoints -= 0.03
         openTransition(world, opp.side)
@@ -377,7 +385,7 @@ function corner(world: WorldState, setup: MatchSetup, side: Side, xSign: number,
   giveTo(world, side, pos, designated ? (p) => p.id === designated.id : (p) => p.role === 'Wing' || p.role === 'WM')
   // hold play briefly so the box routine (near post / far post / edge runs) forms
   world.phase = 'corner'
-  world.restart = { type: 'corner', side, pos: { ...pos }, delay: 30 }
+  world.restart = { type: 'corner', side, pos: { ...pos }, delay: 100 }
   emit({ type: 'corner', side, pos, text: 'Corner' })
 }
 
@@ -388,7 +396,7 @@ function freeKick(world: WorldState, setup: MatchSetup, side: Side, pos: Vec2, e
   if (attackingThird) {
     // dangerous free kick: let runners flood the box before delivery
     world.phase = 'freekick'
-    world.restart = { type: 'freekick', side, pos: { ...pos }, delay: 25 }
+    world.restart = { type: 'freekick', side, pos: { ...pos }, delay: 80 }
   } else {
     world.phase = 'open'
   }
@@ -418,8 +426,8 @@ function penalty(world: WorldState, setup: MatchSetup, side: Side, rng: () => nu
     }
     emit({ type: 'goal', side, playerId: taker?.id, playerName: taker?.name, pos: { x: 0, y: ownGoalY(other(side)) }, text: `GOAL! ${taker?.name ?? ''} scores the penalty`, score: { ...world.score } })
     world.phase = 'celebrate'
-    world.celebrateUntil = world.tick + 25
-    world.restart = { type: 'kickoff', side: other(side), pos: v(0, 0), delay: 25 }
+    world.celebrateUntil = world.tick + 220
+    world.restart = { type: 'kickoff', side: other(side), pos: v(0, 0), delay: 30 }
     resetBall(world)
     world.ball.ownerId = null
   } else {
