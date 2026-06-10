@@ -1,8 +1,26 @@
 import { MatchSimulation } from '../engine/sim/MatchSimulation'
 import { TICK_DT } from '../engine/constants'
-import type { MatchEvent, MatchSetup, Side, WorldState } from '../engine/types'
+import type { MatchEvent, MatchSetup, PenaltyKickResult, Side, WorldState } from '../engine/types'
 import { MatchRenderer } from '../render/MatchRenderer'
 import { ReplayBuffer, type GoalReplay, type ReplayFrame } from './replay'
+
+/** One shootout kick plus the running score after it. */
+export interface ShootoutKickView extends PenaltyKickResult {
+  index: number
+  score: { home: number; away: number }
+}
+
+interface ShootoutState {
+  orders: Record<Side, string[]>
+  score: { home: number; away: number }
+  taken: { home: number; away: number }
+  kicks: ShootoutKickView[]
+  next: Side
+  /** ms timestamp when the next kick may start (pause between kicks). */
+  nextKickAt: number
+  current: PenaltyKickResult | null
+  finished: boolean
+}
 
 export type SpeedLevel = 1 | 2 | 5 | 99
 /** match-seconds advanced per real second at each speed level (baseline ≈10×). */
@@ -17,6 +35,12 @@ export interface MatchCallbacks {
   onFinished?: (world: WorldState) => void
   /** Fired when an automatic goal replay starts / ends. */
   onReplay?: (active: boolean) => void
+  /** 90' is up in a level knockout tie — the manager must pick takers. */
+  onShootoutNeeded?: () => void
+  /** A penalty has been taken (animation finished). */
+  onShootoutKick?: (kick: ShootoutKickView) => void
+  /** The shootout is decided. */
+  onShootoutDone?: (score: { home: number; away: number }) => void
 }
 
 /** Drives a live match: owns the simulation + 3D renderer and a rAF loop. */
@@ -37,9 +61,13 @@ export class MatchController {
   private replayStartAt = 0
   private wasReplaying = false
   private playerMeta: GoalReplay['meta'] = {}
+  private shootoutNeededFired = false
+  private shootout: ShootoutState | null = null
+  private shootoutHoldUntil = 0
 
   constructor(container: HTMLElement, setup: MatchSetup, cb: MatchCallbacks = {}) {
     this.sim = new MatchSimulation(setup)
+    this.sim.interactiveShootout = true
     this.renderer = new MatchRenderer(container, setup)
     this.cb = cb
     for (const side of ['home', 'away'] as Side[]) {
@@ -100,6 +128,14 @@ export class MatchController {
       this.cb.onReplay?.(replaying)
     }
 
+    // 90' up in a level knockout tie → hand over to the shootout UI
+    if (this.sim.awaitingShootout() && !this.shootoutNeededFired) {
+      this.shootoutNeededFired = true
+      this.drainEvents(now)
+      this.cb.onShootoutNeeded?.()
+    }
+    if (this.shootout && !this.paused) this.stepShootout(now)
+
     // the sim holds while a replay plays — the world resumes exactly after
     if (!this.paused && !replaying && !this.sim.world.finished) {
       const matchSeconds = dt * SPEED_RATE[this.speed]
@@ -115,11 +151,92 @@ export class MatchController {
     this.renderer.update(this.sim.world, dt)
     this.cb.onFrame?.(this.sim.world)
 
-    if (this.sim.world.finished && !this.finishedFired && !replaying && !this.pendingReplay) {
+    if (
+      this.sim.world.finished &&
+      !this.finishedFired &&
+      !replaying &&
+      !this.pendingReplay &&
+      now >= this.shootoutHoldUntil
+    ) {
       this.finishedFired = true
       this.drainEvents(now)
       this.cb.onFinished?.(this.sim.world)
     }
+  }
+
+  // ── penalty shootout orchestration ─────────────────────────────
+
+  /** Start the shootout with the user's chosen taker order (5 ids, in order).
+   *  The AI side's order is picked automatically. */
+  beginShootout(userSide: Side, userOrder: string[]): void {
+    const aiSide: Side = userSide === 'home' ? 'away' : 'home'
+    const orders: Record<Side, string[]> = {
+      home: userSide === 'home' ? userOrder : this.sim.defaultShootoutOrder('home'),
+      away: userSide === 'away' ? userOrder : this.sim.defaultShootoutOrder('away'),
+    }
+    void aiSide
+    this.renderer.beginShootoutStage()
+    this.shootout = {
+      orders,
+      score: { home: 0, away: 0 },
+      taken: { home: 0, away: 0 },
+      kicks: [],
+      next: 'home',
+      nextKickAt: performance.now() + 1400,
+      current: null,
+      finished: false,
+    }
+  }
+
+  private stepShootout(now: number): void {
+    const s = this.shootout!
+    if (s.finished) return
+
+    if (s.current) {
+      if (this.renderer.penaltyBusy()) return
+      // animation done: tally the kick
+      const k = s.current
+      s.current = null
+      if (k.scored) s.score[k.side]++
+      s.taken[k.side]++
+      const view: ShootoutKickView = { ...k, index: s.kicks.length, score: { ...s.score } }
+      s.kicks.push(view)
+      this.cb.onShootoutKick?.(view)
+      s.next = k.side === 'home' ? 'away' : 'home'
+      s.nextKickAt = now + 1000
+      if (this.shootoutDecided(s)) {
+        s.finished = true
+        this.renderer.endShootout()
+        this.sim.applyShootoutResult(s.score)
+        this.shootoutHoldUntil = now + 2400
+        this.cb.onShootoutDone?.({ ...s.score })
+      }
+      return
+    }
+
+    if (now < s.nextKickAt) return
+    const side = s.next
+    const order = s.orders[side]
+    const takerId = order[s.taken[side] % Math.max(1, order.length)]
+    const kickIndex = s.taken.home + s.taken.away
+    const result = this.sim.resolvePenaltyKick(takerId, side, kickIndex)
+    s.current = result
+    const gk = this.sim.world.players.find((p) => p.side !== side && p.role === 'GK' && p.onPitch)
+    this.renderer.playPenalty(result, gk?.id ?? null)
+  }
+
+  /** Best-of-5 with early termination, then sudden death. */
+  private shootoutDecided(s: ShootoutState): boolean {
+    const remHome = Math.max(0, 5 - s.taken.home)
+    const remAway = Math.max(0, 5 - s.taken.away)
+    if (s.taken.home <= 5 && s.taken.away <= 5) {
+      if (s.score.home > s.score.away + remAway) return true
+      if (s.score.away > s.score.home + remHome) return true
+    }
+    if (s.taken.home >= 5 && s.taken.away >= 5 && s.taken.home === s.taken.away) {
+      return s.score.home !== s.score.away
+    }
+    return false
   }
 
   private drainEvents(now: number) {

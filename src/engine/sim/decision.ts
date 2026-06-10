@@ -16,15 +16,22 @@ interface GameCtx {
   protecting: boolean
   /** heavy-legs multiplier applied to decision attributes */
   fatigue: number
+  /** momentum offset from neutral: -50..+50 */
+  mom: number
+  /** an active counter-attack window for the owner's side */
+  countering: boolean
 }
 
 function gameCtx(world: WorldState, owner: SimPlayer): GameCtx {
   const diff = world.score[owner.side] - world.score[other(owner.side)]
   const min = world.timeSec / 60
+  const t = world.transition
   return {
     desperate: diff <= -2 && min >= 70,
     protecting: diff >= 2 && min >= 70,
     fatigue: fatigueFactor(owner, world.timeSec),
+    mom: world.momentum[owner.side] - 50,
+    countering: !!t && t.side === owner.side && t.counter && world.tick < t.untilTick,
   }
 }
 
@@ -87,6 +94,7 @@ export function decideOnBall(
   if (owner.attrs.shooting >= 85) shootProb *= 1.35
   if (ctx.desperate) shootProb *= 1.9 // chasing the game: shoot on sight
   if (ctx.protecting) shootProb *= 0.45 // killing the game: keep it safe
+  if (ctx.countering) shootProb *= 1.3 // strike before the shape reforms
   const minQ = owner.attrs.shooting >= 85 ? 0.1 : 0.13
   const wantShoot = d2goal < shootRange && owner.pos.y * dir > 2 && q > minQ && rng() < shootProb
   if (wantShoot) {
@@ -109,9 +117,12 @@ export function decideOnBall(
     return null
   }
 
-  const dribbleScore = (owner.attrs.dribbling * ctx.fatigue / 99) * (1 - pressFactor) * 6
-  // elite passers (85+) look for the killer ball more often
-  const passBias = owner.attrs.passing >= 85 ? 0.9 : 0.82
+  let dribbleScore = (owner.attrs.dribbling * ctx.fatigue / 99) * (1 - pressFactor) * 6
+  // archetype temperament on the ball
+  if (owner.archetype === 'dribbler') dribbleScore *= 1.35 // backs himself 1v1
+  if (owner.archetype === 'playmaker' && pressFactor < 0.3) dribbleScore += 1.2 // holds, draws markers
+  // elite passers (85+) look for the killer ball; speedsters are less patient
+  const passBias = owner.archetype === 'speedster' ? 0.74 : owner.attrs.passing >= 85 ? 0.9 : 0.82
   if (pass && pass.score > dribbleScore && rng() < passBias) {
     executePass(world, owner, pass.target, pass.lofted, pass.receiverId, rng, ctx)
     return null
@@ -131,7 +142,9 @@ function shoot(
 ): null {
   const gk = opponentKeeper(world, shooter.side)
   const gkRating = gk?.overall ?? 70
-  const onTargetProb = clamp01(0.38 + q * 0.35)
+  // momentum sways composure in front of goal (±8%)
+  const momScale = 1 + (world.momentum[shooter.side] - 50) * 0.0016
+  const onTargetProb = clamp01((0.38 + q * 0.35) * momScale)
   const onTarget = rng() < onTargetProb
   const pGoal = clamp01(q * 0.78 * (shooter.attrs.shooting / (shooter.attrs.shooting + gkRating * 0.95)))
   const isGoal = onTarget && rng() < pGoal
@@ -193,8 +206,11 @@ interface PassOption {
 
 function bestPass(world: WorldState, owner: SimPlayer, dir: number, ctx?: GameCtx): PassOption | null {
   let best: PassOption | null = null
-  // elite passers value the forward/killer ball more
-  const fwdWeight = 0.5 + (owner.attrs.passing >= 85 ? 0.25 : 0)
+  // elite passers value the forward/killer ball; target men lay off to feet;
+  // a counter-attack demands the direct ball
+  let fwdWeight = 0.5 + (owner.attrs.passing >= 85 ? 0.25 : 0)
+  if (owner.archetype === 'targetman') fwdWeight = 0.25
+  if (ctx?.countering) fwdWeight += 0.35
   for (const mate of onPitch(world, owner.side)) {
     if (mate.id === owner.id) continue
     const passDist = dist(owner.pos, mate.pos)
@@ -237,9 +253,10 @@ function executePass(
 ): void {
   const toTarget = sub(target, owner.pos)
   const d = len(toTarget)
-  // angular error grows when passing is poor, distance is long, or legs are gone
+  // angular error grows when passing is poor, distance is long, or legs are
+  // gone — and shrinks/grows with momentum (±5% completion swing)
   const effPassing = owner.attrs.passing * (ctx?.fatigue ?? 1)
-  const errSd = (1 - effPassing / 99) * 0.12 + d * 0.001
+  const errSd = ((1 - effPassing / 99) * 0.12 + d * 0.001) * (1 - (ctx?.mom ?? 0) * 0.002)
   const ang = Math.atan2(toTarget.y, toTarget.x) + gauss(rng, 0, errSd)
   const speed = clamp(d / 1.05, 7, BALL.MAX_PASS_SPEED)
   world.ball.ownerId = null
@@ -265,7 +282,11 @@ function cross(world: WorldState, owner: SimPlayer, rng: () => number, emit: Emi
     (p) => p.id !== owner.id && p.pos.y * dir > PITCH.HALF_L - 20 && Math.abs(p.pos.x) < 18,
   )
   if (box.length === 0) return false
-  const target = box.sort((a, b) => b.overall - a.overall)[0]
+  // a target man in the box demands the cross; otherwise pick the best player
+  const target = box.sort(
+    (a, b) =>
+      (b.archetype === 'targetman' ? 40 : 0) + b.overall - ((a.archetype === 'targetman' ? 40 : 0) + a.overall),
+  )[0]
   const aim = { x: target.pos.x + gauss(rng, 0, 3), y: target.pos.y }
   const toAim = sub(aim, owner.pos)
   const d = len(toAim)
@@ -309,6 +330,8 @@ function dribbleTarget(world: WorldState, owner: SimPlayer, ctx?: GameCtx): Vec2
   const goal = ctx?.protecting
     ? v(Math.sign(owner.pos.x || 1) * (PITCH.HALF_W - 4), targetGoalY(owner.side) - dir * 14)
     : v(0, targetGoalY(owner.side))
+  // counters and speedsters drive at goal harder
+  const stride = ctx?.countering ? 9 : owner.archetype === 'speedster' ? 7.5 : 6
   let drive = norm(sub(goal, owner.pos))
   // steer away from the nearest opponent if close
   let nearest: SimPlayer | undefined
@@ -325,8 +348,8 @@ function dribbleTarget(world: WorldState, owner: SimPlayer, ctx?: GameCtx): Vec2
     drive = norm({ x: drive.x + away.x * 0.9, y: drive.y + away.y * 0.6 })
   }
   return {
-    x: clamp(owner.pos.x + drive.x * 6, -(PITCH.HALF_W - 1), PITCH.HALF_W - 1),
-    y: clamp(owner.pos.y + drive.y * 6 + dir * 1, -(PITCH.HALF_L - 1), PITCH.HALF_L - 1),
+    x: clamp(owner.pos.x + drive.x * stride, -(PITCH.HALF_W - 1), PITCH.HALF_W - 1),
+    y: clamp(owner.pos.y + drive.y * stride + dir * 1, -(PITCH.HALF_L - 1), PITCH.HALF_L - 1),
   }
 }
 

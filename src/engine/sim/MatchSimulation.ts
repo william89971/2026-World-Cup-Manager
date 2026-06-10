@@ -1,9 +1,11 @@
 import { DECISION_INTERVAL, HALF_SECONDS, MATCH_SECONDS, TICK_DT } from '../constants'
+import { archetypeOf } from '../../data/archetypes'
 import type { Mentality, Pressing } from '../../data/types'
 import type {
   MatchEvent,
   MatchResult,
   MatchSetup,
+  PenaltyKickResult,
   PlayerMatchRating,
   Side,
   SimPlayer,
@@ -17,12 +19,13 @@ import { stepBall } from './physics'
 import { decideOnBall, type EmitFn } from './decision'
 import { getFormation } from '../formations'
 
-const EXTRA_SECONDS = 2 * 15 * 60 // two 15-min halves
-
 export class MatchSimulation {
   readonly setup: MatchSetup
   world: WorldState
   events: MatchEvent[] = []
+  /** When true, a level knockout tie freezes at 90' (phase 'shootout') and
+   *  waits for the UI to run the shootout. Headless sims resolve it instantly. */
+  interactiveShootout = false
   private rng: () => number
   private subsUsed: Record<Side, number> = { home: 0, away: 0 }
   private finalized = false
@@ -47,6 +50,8 @@ export class MatchSimulation {
   step(): void {
     const w = this.world
     if (w.finished) return
+    // frozen at 90' awaiting the interactive penalty shootout
+    if (w.phase === 'shootout') return
 
     // ── clock + period transitions ──────────────────────────────
     w.tick++
@@ -57,19 +62,21 @@ export class MatchSimulation {
       w.half = 2
       this.kickoff(other('home')) // away kicks off 2nd half
     } else if (w.half === 2 && w.timeSec >= MATCH_SECONDS) {
-      if (this.needsExtra()) {
-        w.half = 3
-        this.kickoff('home')
-      } else {
-        return this.finish()
+      // no extra time: a level knockout tie goes straight to penalties
+      if (this.setup.knockout && w.score.home === w.score.away) {
+        if (this.interactiveShootout) {
+          w.phase = 'shootout'
+          this.emit({ type: 'fulltime', text: 'Full-time — penalties will decide it!' })
+          return
+        }
+        this.shootout()
       }
-    } else if (w.half === 3 && w.timeSec >= MATCH_SECONDS + EXTRA_SECONDS / 2) {
-      w.half = 4
-      this.kickoff(other('home'))
-    } else if (w.half === 4 && w.timeSec >= MATCH_SECONDS + EXTRA_SECONDS) {
-      if (w.score.home === w.score.away) this.shootout()
       return this.finish()
     }
+
+    // momentum drifts back toward neutral
+    w.momentum.home += (50 - w.momentum.home) * 0.0004
+    w.momentum.away += (50 - w.momentum.away) * 0.0004
 
     // ── restart / celebration handling ──────────────────────────
     if (w.phase === 'celebrate') {
@@ -100,10 +107,6 @@ export class MatchSimulation {
     if (ownerSide) w.stats.possessionTicks[ownerSide]++
   }
 
-  private needsExtra(): boolean {
-    return !!this.setup.knockout && this.world.score.home === this.world.score.away
-  }
-
   /** Reset to formation shape and restart play from the centre circle. */
   private kickoff(side: Side): void {
     const w = this.world
@@ -127,6 +130,7 @@ export class MatchSimulation {
     if (taker) taker.pos = { x: 0, y: 0 }
     w.phase = 'kickoff'
     w.restart = null // discard any set piece interrupted by the period change
+    w.transition = null
     if (w.tick === 0) this.emit({ type: 'kickoff', side, text: 'Kick-off' })
   }
 
@@ -170,6 +174,71 @@ export class MatchSimulation {
       .slice(0, 5)
   }
 
+  // ── interactive shootout (UI-driven) ───────────────────────────
+
+  /** True while frozen at 90' waiting for the shootout to be run. */
+  awaitingShootout(): boolean {
+    return this.world.phase === 'shootout' && !this.world.finished
+  }
+
+  /** On-pitch outfielders a manager can pick penalty takers from. */
+  shootoutCandidates(side: Side): SimPlayer[] {
+    return onPitch(this.world, side)
+      .filter((p) => p.role !== 'GK')
+      .sort((a, b) => b.attrs.shooting - a.attrs.shooting)
+  }
+
+  /** Default AI taker order (best 5 shooters). */
+  defaultShootoutOrder(side: Side): string[] {
+    return this.shootoutCandidates(side)
+      .slice(0, 5)
+      .map((p) => p.id)
+  }
+
+  /** Resolve one penalty kick. `kickIndex` is 0-based across the shootout —
+   *  later kicks carry more pressure. Pure outcome; animation is the UI's job. */
+  resolvePenaltyKick(takerId: string, side: Side, kickIndex: number): PenaltyKickResult {
+    const taker = this.world.players.find((p) => p.id === takerId)
+    const keeper = onPitch(this.world, other(side)).find((p) => p.role === 'GK')
+    const shooting = taker?.attrs.shooting ?? 70
+    const gkRating = keeper?.overall ?? 75
+    const pressure = clamp(0.018 * Math.max(0, kickIndex - 1) + (kickIndex >= 10 ? 0.05 : 0), 0, 0.16)
+    const pScore = clamp(0.78 + (shooting - 80) / 220 - (gkRating - 78) / 320 - pressure, 0.42, 0.92)
+    const scored = this.rng() < pScore
+    const dirs: (-1 | 0 | 1)[] = [-1, 0, 1]
+    const shotDir = dirs[Math.floor(this.rng() * 3)]
+    let outcome: PenaltyKickResult['outcome']
+    let diveDir: -1 | 0 | 1
+    if (scored) {
+      outcome = 'goal'
+      // keeper usually goes the wrong way on a goal
+      const wrong = dirs.filter((d) => d !== shotDir)
+      diveDir = this.rng() < 0.7 ? wrong[Math.floor(this.rng() * wrong.length)] : shotDir
+    } else if (this.rng() < 0.78) {
+      outcome = 'save'
+      diveDir = shotDir
+    } else {
+      outcome = 'off'
+      diveDir = dirs[Math.floor(this.rng() * 3)]
+    }
+    return {
+      takerId,
+      takerName: taker?.name ?? takerId,
+      side,
+      scored,
+      outcome,
+      shotDir,
+      diveDir,
+    }
+  }
+
+  /** Record the final shootout score and end the match. */
+  applyShootoutResult(score: { home: number; away: number }): void {
+    this.world.shootout = { ...score }
+    this.emit({ type: 'fulltime', text: `Shootout: ${score.home}–${score.away}` })
+    this.finish()
+  }
+
   // ── in-match manager controls ──────────────────────────────────
   canSub(side: Side): boolean {
     return this.subsUsed[side] < 5
@@ -196,6 +265,7 @@ export class MatchSimulation {
       name: rec.name,
       number: rec.number,
       role: out.role,
+      archetype: archetypeOf(rec.attrs),
       anchor: { ...out.anchor },
       pos: { ...out.pos },
       vel: { x: 0, y: 0 },

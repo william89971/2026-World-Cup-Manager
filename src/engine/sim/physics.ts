@@ -1,8 +1,22 @@
 import { BALL, PITCH, PLAYER, TICK_DT } from '../constants'
 import type { MatchSetup, Side, SimPlayer, Vec2, WorldState } from '../types'
-import { attackDir, byId, nearestPlayer, onPitch, other, ownGoalY } from './world'
+import { attackDir, byId, nearestPlayer, onPitch, other, ownGoalY, shiftMomentum } from './world'
 import type { EmitFn } from './decision'
 import { clamp, dist, scale, v } from '../util'
+
+/** Open a 3-second transition window for the side that just won the ball.
+ *  If 2+ of their players are already ahead of the ball, it's a counter. */
+function openTransition(world: WorldState, side: Side): void {
+  if (world.phase !== 'open') return
+  const dir = attackDir(side)
+  const ballY = world.ball.pos.y
+  const ahead = onPitch(world, side).filter(
+    (p) => p.role !== 'GK' && (p.pos.y - ballY) * dir > 3,
+  ).length
+  world.transition = { side, untilTick: world.tick + 30, counter: ahead >= 2 }
+  // winning the ball back in the opposition half = a successful press
+  if (ballY * dir > 0) shiftMomentum(world, side, 3)
+}
 
 /** Advance the ball + resolve possession/tackles/goals for one tick. */
 export function stepBall(world: WorldState, setup: MatchSetup, rng: () => number, emit: EmitFn): void {
@@ -112,8 +126,10 @@ function resolveBounds(world: WorldState, setup: MatchSetup, emit: EmitFn): bool
 
 function scoreGoal(world: WorldState, side: Side, emit: EmitFn): void {
   world.score[side]++
+  shiftMomentum(world, side, 12)
   const scorer = byId(world, world.ball.shooterId)
   const assister = byId(world, world.ball.lastPasserId)
+  world.lastScorerId = scorer?.id ?? null
   if (scorer) {
     scorer.goals++
     scorer.ratingPoints += 1.7
@@ -149,6 +165,7 @@ function scoreGoal(world: WorldState, side: Side, emit: EmitFn): void {
 
 function keeperSave(world: WorldState, defendingSide: Side, emit: EmitFn): void {
   const gk = onPitch(world, defendingSide).find((p) => p.role === 'GK')
+  shiftMomentum(world, defendingSide, 5) // big chance survived
   if (gk) {
     gk.saves++
     gk.ratingPoints += 0.16
@@ -231,6 +248,7 @@ function tryControl(world: WorldState, emit: EmitFn): void {
     } else if (intercepted) {
       ball.lastPasserId = null
       controller.ratingPoints += 0.015
+      openTransition(world, controller.side)
       emit({ type: 'interception', side: controller.side, playerId: controller.id, playerName: controller.name, pos: { ...controller.pos }, text: `${controller.name} intercepts` })
     }
   }
@@ -242,14 +260,16 @@ function tryTackle(world: WorldState, setup: MatchSetup, owner: SimPlayer, rng: 
     if (dist(opp.pos, owner.pos) > PLAYER.REACH) continue
     const ratio = opp.attrs.defending / (opp.attrs.defending + owner.attrs.dribbling)
     if (rng() < 0.04 * (0.6 + ratio)) {
-      // tackle engaged
-      if (rng() < 0.9) {
+      // tackle engaged — dribblers ride challenges and draw more fouls
+      const cleanProb = owner.archetype === 'dribbler' ? 0.84 : 0.9
+      if (rng() < cleanProb) {
         // clean win
         world.ball.ownerId = opp.id
         world.ball.lastTouch = opp.side
         world.ball.lastPasserId = null
         opp.ratingPoints += 0.04
         owner.ratingPoints -= 0.03
+        openTransition(world, opp.side)
         emit({ type: 'tackle', side: opp.side, playerId: opp.id, playerName: opp.name, pos: { ...opp.pos }, text: `${opp.name} wins the ball` })
       } else {
         foul(world, setup, opp, owner, rng, emit)
@@ -269,11 +289,13 @@ function foul(world: WorldState, setup: MatchSetup, fouler: SimPlayer, victim: S
   if (dangerous) {
     fouler.yellow++
     world.stats.yellows[fouler.side]++
+    shiftMomentum(world, victim.side, 2) // a booking won
     if (fouler.yellow >= 2) {
       fouler.red = true
       fouler.onPitch = false
       fouler.offSec = world.timeSec
       world.stats.reds[fouler.side]++
+      shiftMomentum(world, fouler.side, -10)
       emit({ type: 'red', side: fouler.side, playerId: fouler.id, playerName: fouler.name, pos: { ...fouler.pos }, text: `${fouler.name} is sent off (2nd yellow)!` })
     } else {
       emit({ type: 'yellow', side: fouler.side, playerId: fouler.id, playerName: fouler.name, pos: { ...fouler.pos }, text: `${fouler.name} booked` })
@@ -283,6 +305,7 @@ function foul(world: WorldState, setup: MatchSetup, fouler: SimPlayer, victim: S
     fouler.onPitch = false
     fouler.offSec = world.timeSec
     world.stats.reds[fouler.side]++
+    shiftMomentum(world, fouler.side, -10)
     emit({ type: 'red', side: fouler.side, playerId: fouler.id, playerName: fouler.name, pos: { ...fouler.pos }, text: `${fouler.name} is sent off!` })
   }
 
@@ -387,9 +410,11 @@ function penalty(world: WorldState, setup: MatchSetup, side: Side, rng: () => nu
   const pScore = clamp(0.78 + (taker ? (taker.attrs.shooting - 80) / 200 : 0) - (gk ? (gk.overall - 80) / 300 : 0), 0.55, 0.92)
   if (rng() < pScore) {
     world.score[side]++
+    shiftMomentum(world, side, 12)
     if (taker) {
       taker.goals++
       taker.ratingPoints += 1.2
+      world.lastScorerId = taker.id
     }
     emit({ type: 'goal', side, playerId: taker?.id, playerName: taker?.name, pos: { x: 0, y: ownGoalY(other(side)) }, text: `GOAL! ${taker?.name ?? ''} scores the penalty`, score: { ...world.score } })
     world.phase = 'celebrate'
@@ -398,6 +423,7 @@ function penalty(world: WorldState, setup: MatchSetup, side: Side, rng: () => nu
     resetBall(world)
     world.ball.ownerId = null
   } else {
+    shiftMomentum(world, side, -8) // missed penalty deflates
     if (gk) {
       gk.saves++
       gk.ratingPoints += 0.6

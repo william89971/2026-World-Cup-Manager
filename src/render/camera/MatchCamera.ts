@@ -80,6 +80,14 @@ export class MatchCamera {
     this.panDur = seconds
   }
 
+  /** Smoothly frame an arbitrary position/look-at (shootout staging etc). */
+  frameTo(px: number, py: number, pz: number, lx: number, ly: number, lz: number, dt: number) {
+    this.pos.to(new THREE.Vector3(px, py, pz), 0.6, dt)
+    this.look.to(new THREE.Vector3(lx, ly, lz), 0.4, dt)
+    this.camera.position.copy(this.pos.value)
+    this.camera.lookAt(this.look.value)
+  }
+
   /** Low, dramatic angle used while a goal replay plays. */
   replayUpdate(ballX: number, ballZ: number, dt: number) {
     const side = ballZ >= 0 ? 1 : -1

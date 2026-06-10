@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { MatchSetup, Side, SimPlayer, WorldState } from '../engine/types'
+import type { MatchSetup, PenaltyKickResult, Side, SimPlayer, WorldState } from '../engine/types'
 import type { ReplayFrame } from '../match/replay'
 import { PITCH } from '../engine/constants'
 import { Stadium } from './entities/Stadium'
@@ -20,6 +20,23 @@ interface ActiveReplay {
   t: number
   dur: number
 }
+
+/** Scripted penalty kick: setup → run-up → ball flight + dive → result hold. */
+interface PenaltySeq {
+  kick: PenaltyKickResult
+  gkId: string | null
+  t: number
+}
+const PEN = {
+  SPOT_Z: PITCH.HALF_L - 11, // stage at the +z goal
+  GOAL_Z: PITCH.HALF_L,
+  SETUP: 0.6,
+  RUNUP: 0.9,
+  FLIGHT: 0.5,
+  HOLD: 1.3,
+  total: 0, // filled below
+}
+PEN.total = PEN.SETUP + PEN.RUNUP + PEN.FLIGHT + PEN.HOLD
 
 /** Per-weather scene parameters. */
 const WEATHER_PRESETS: Record<
@@ -43,6 +60,9 @@ export class MatchRenderer {
   private rain: THREE.Points | null = null
   private rainVel: Float32Array | null = null
   private replay: ActiveReplay | null = null
+  private shootoutStage = false
+  private penalty: PenaltySeq | null = null
+  private standSpots = new Map<string, { x: number; z: number }>()
   readonly weather: Weather
 
   constructor(container: HTMLElement, setup: MatchSetup) {
@@ -188,10 +208,150 @@ export class MatchRenderer {
     this.cam.replayUpdate(this.ball.mesh.position.x, this.ball.mesh.position.z, dt)
   }
 
+  // ── penalty shootout staging ────────────────────────────────────
+  beginShootoutStage() {
+    this.shootoutStage = true
+    this.standSpots.clear()
+  }
+
+  endShootout() {
+    this.shootoutStage = false
+    this.penalty = null
+    // clear any dive lean left on figures
+    for (const f of this.figures.values()) f.h.group.rotation.z = 0
+  }
+
+  playPenalty(kick: PenaltyKickResult, gkId: string | null) {
+    this.penalty = { kick, gkId, t: 0 }
+  }
+
+  penaltyBusy(): boolean {
+    return this.penalty !== null
+  }
+
+  private updateShootout(world: WorldState, dt: number) {
+    // assign standing spots around the centre circle once
+    if (this.standSpots.size === 0) {
+      let i = 0
+      for (const p of world.players) {
+        if (!p.onPitch || p.red) continue
+        const ang = (i / 20) * Math.PI * 2
+        this.standSpots.set(p.id, { x: Math.cos(ang) * 11, z: Math.sin(ang) * 8 - 2 })
+        i++
+      }
+    }
+
+    const pen = this.penalty
+    const takerId = pen?.kick.takerId
+    const gkId = pen?.gkId
+    if (pen) pen.t += dt
+
+    let ballX = 0
+    let ballZ = PEN.SPOT_Z
+    let ballH = 0
+
+    for (const p of world.players) {
+      const f = this.figures.get(p.id)
+      if (!p.onPitch || p.red) {
+        if (f) f.h.group.visible = false
+        continue
+      }
+      const fig = this.ensure(p)
+      fig.h.group.visible = true
+
+      if (pen && p.id === takerId) {
+        // run-up: walk in, strike, follow through
+        const t = pen.t
+        let z = PEN.SPOT_Z - 6
+        let speed = 0
+        if (t > PEN.SETUP && t <= PEN.SETUP + PEN.RUNUP) {
+          const k = (t - PEN.SETUP) / PEN.RUNUP
+          z = PEN.SPOT_Z - 6 + k * 5.2
+          speed = 5
+          if (k > 0.92 && fig.prevKickCd === 0) {
+            fig.h.triggerKick()
+            fig.prevKickCd = 1
+          }
+        } else if (t > PEN.SETUP + PEN.RUNUP) {
+          z = PEN.SPOT_Z - 0.8
+        }
+        fig.h.group.position.set(0, 0, z)
+        fig.facing = 0 // facing +z goal
+        fig.h.update(speed, 0, dt)
+        continue
+      }
+
+      if (pen && p.id === gkId) {
+        // keeper: set on the line, dive during flight
+        const t = pen.t
+        const flightStart = PEN.SETUP + PEN.RUNUP
+        let x = 0
+        let lean = 0
+        if (t > flightStart) {
+          const k = Math.min(1, (t - flightStart) / 0.4)
+          x = pen.kick.diveDir * 2.3 * k
+          lean = pen.kick.diveDir !== 0 ? -pen.kick.diveDir * 0.95 * k : 0
+        }
+        fig.h.group.position.set(x, 0, PEN.GOAL_Z - 0.4)
+        fig.h.group.rotation.z = lean
+        fig.facing = Math.PI // facing the taker (-z)
+        fig.h.update(0, Math.PI, dt)
+        continue
+      }
+
+      // everyone else stands around the centre circle
+      const spot = this.standSpots.get(p.id) ?? { x: 0, z: -6 }
+      const target = new THREE.Vector3(spot.x, 0, spot.z)
+      fig.h.group.position.lerp(target, Math.min(1, dt * 4))
+      fig.h.group.rotation.z = 0
+      fig.h.update(0.2, 0, dt)
+    }
+
+    // ball trajectory
+    if (pen) {
+      const t = pen.t
+      const flightStart = PEN.SETUP + PEN.RUNUP
+      if (t > flightStart) {
+        const k = Math.min(1, (t - flightStart) / PEN.FLIGHT)
+        const targetX =
+          pen.kick.outcome === 'off'
+            ? pen.kick.shotDir * (PITCH.GOAL_HALF_W + 1.5) || 1.2
+            : pen.kick.shotDir * (PITCH.GOAL_HALF_W - 1.1)
+        const targetH = pen.kick.outcome === 'off' && pen.kick.shotDir === 0 ? PITCH.GOAL_HEIGHT + 1 : 0.8 + Math.abs(pen.kick.shotDir) * 0.3
+        if (pen.kick.outcome === 'save' && k >= 1) {
+          // parried back out
+          ballX = targetX * 1.1
+          ballZ = PEN.GOAL_Z - 2.5
+          ballH = 0.2
+        } else {
+          ballX = targetX * k
+          ballZ = PEN.SPOT_Z + (PEN.GOAL_Z + (pen.kick.outcome === 'goal' ? 0.8 : 0.2) - PEN.SPOT_Z) * k
+          ballH = Math.sin(k * Math.PI * 0.5) * targetH
+        }
+      }
+      if (pen.t >= PEN.total) {
+        // sequence complete
+        const takerFig = takerId ? this.figures.get(takerId) : null
+        if (takerFig) takerFig.prevKickCd = 0
+        this.penalty = null
+      }
+    }
+    this.ball.update(ballX, ballZ, ballH, dt)
+
+    // camera: low behind-the-spot framing
+    this.cam.frameTo(7.5, 4.2, PEN.SPOT_Z - 15, 0, 1.2, PEN.GOAL_Z - 2, dt)
+    this.renderer.render(this.scene, this.cam.camera)
+  }
+
   /** Sync visuals to the latest engine world for one rendered frame. */
   update(world: WorldState, dt: number) {
     this.stadium.update(dt)
     this.updateRain(dt)
+
+    if (this.shootoutStage) {
+      this.updateShootout(world, dt)
+      return
+    }
 
     if (this.replay) {
       this.updateReplay(dt)

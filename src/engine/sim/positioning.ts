@@ -2,7 +2,7 @@ import { PITCH } from '../constants'
 import type { Mentality, Pressing } from '../../data/types'
 import type { MatchSetup, Side, SimPlayer, Vec2, WorldState } from '../types'
 import { attackDir, byId, onPitch, other, ownGoalY, targetGoalY } from './world'
-import { clamp, dist2, v } from '../util'
+import { clamp, dist2, lerp, v } from '../util'
 
 interface SideTactics {
   mentality: Mentality
@@ -42,6 +42,37 @@ function shapeContext(world: WorldState, side: Side): ShapeCtx {
   return { push: 1, drop: 1, width: 1 }
 }
 
+/** What the off-ball brain needs to know about the current attack. */
+interface OffBallCtx {
+  /** y of the opposition's offside line (2nd-deepest outfielder), in this side's attack frame. */
+  oppLineY: number
+  /** y of the opposition's midfield line. */
+  oppMidY: number
+  buildup: boolean // in possession, ball in own third
+  finalThird: boolean // ball in attacking third
+  ownerIsMid: boolean // a CM/CDM/CAM/WM teammate carries the ball
+  owner: SimPlayer | null
+}
+
+function offBallContext(world: WorldState, side: Side, owner: SimPlayer | null, inPoss: boolean): OffBallCtx {
+  const dir = attackDir(side)
+  const opps = onPitch(world, other(side)).filter((p) => p.role !== 'GK')
+  // opposition defensive line = their 2nd-deepest outfielder (offside line)
+  const depths = opps.map((p) => p.pos.y * dir).sort((a, b) => b - a)
+  const oppLineY = (depths[1] ?? depths[0] ?? PITCH.HALF_L - 12) * dir
+  const mids = opps.filter((p) => p.role === 'CM' || p.role === 'CDM' || p.role === 'CAM')
+  const oppMidY = mids.length > 0 ? mids.reduce((s, p) => s + p.pos.y, 0) / mids.length : world.ball.pos.y
+  const ballAdv = world.ball.pos.y * dir
+  return {
+    oppLineY,
+    oppMidY,
+    buildup: inPoss && ballAdv < -PITCH.HALF_L / 3,
+    finalThird: ballAdv > PITCH.HALF_L / 3,
+    ownerIsMid: !!owner && owner.side === side && (owner.role === 'CM' || owner.role === 'CDM' || owner.role === 'CAM' || owner.role === 'WM'),
+    owner: owner && owner.side === side ? owner : null,
+  }
+}
+
 function nearestOfSide(mates: SimPlayer[], point: Vec2, excludeGk = true): SimPlayer | undefined {
   let best: SimPlayer | undefined
   let bestD = Infinity
@@ -66,6 +97,11 @@ export function computeTargets(world: WorldState, setup: MatchSetup): Map<string
     setPieceTargets(world, out)
     return out
   }
+  // goal celebration: scorer to the corner, teammates chase him
+  if (world.phase === 'celebrate') {
+    celebrateTargets(world, out)
+    return out
+  }
 
   const owner = byId(world, world.ball.ownerId)
   const ball = world.ball.pos
@@ -74,6 +110,7 @@ export function computeTargets(world: WorldState, setup: MatchSetup): Map<string
   const loose = !owner
   // side "in possession": the carrier's side, or the last team to touch a ball in flight
   const attackingSide: Side | null = owner ? owner.side : world.ball.inFlight ? world.ball.lastTouch : null
+  const transition = world.transition && world.tick < world.transition.untilTick ? world.transition : null
 
   for (const side of ['home', 'away'] as Side[]) {
     const tac = tacticsOf(setup, side)
@@ -81,6 +118,7 @@ export function computeTargets(world: WorldState, setup: MatchSetup): Map<string
     const inPoss = attackingSide === side
     const mates = onPitch(world, side)
     const ctx = shapeContext(world, side)
+    const off = offBallContext(world, side, owner ?? null, inPoss)
 
     // who chases the ball for this side: the intended receiver runs to the
     // pass destination; otherwise the nearest player chases the live ball.
@@ -90,26 +128,49 @@ export function computeTargets(world: WorldState, setup: MatchSetup): Map<string
     const chaser = loose && !intendedId ? nearestOfSide(mates, predicted) : undefined
 
     // ── pressing assignment (defending team closes the carrier down) ──
-    // high press: the front players hunt the carrier anywhere in the
-    // opposition half; low press only engages once the ball comes to them.
+    // high press: front players hunt anywhere in the opposition half; momentum
+    // adds a presser; workhorses join from further out.
     const pressers = new Set<string>()
     if (!inPoss && !loose) {
       const range = PRESS_RANGE[tac.pressing]
       const ballInOppHalf = ball.y * dir > 0
       const pool = mates.filter((p) => p.role !== 'GK')
+      const pressDist = (p: SimPlayer) => dist2(p.pos, ball) * (p.archetype === 'workhorse' ? 0.6 : 1)
+      const bonus = world.momentum[side] >= 65 ? 1 : 0
       if (tac.pressing === 'high' && ballInOppHalf) {
-        // front line presses: most advanced players closest to the ball
         const front = [...pool]
           .sort((a, b) => b.pos.y * dir - a.pos.y * dir)
           .slice(0, 5)
-          .sort((a, b) => dist2(a.pos, ball) - dist2(b.pos, ball))
-        front.slice(0, 3).forEach((p) => pressers.add(p.id))
+          .sort((a, b) => pressDist(a) - pressDist(b))
+        front.slice(0, 3 + bonus).forEach((p) => pressers.add(p.id))
       } else {
-        const sorted = [...pool].sort((a, b) => dist2(a.pos, ball) - dist2(b.pos, ball))
-        sorted.slice(0, PRESS_COUNT[tac.pressing]).forEach((p, idx) => {
+        const sorted = [...pool].sort((a, b) => pressDist(a) - pressDist(b))
+        sorted.slice(0, PRESS_COUNT[tac.pressing] + bonus).forEach((p, idx) => {
           if (idx === 0 || dist2(p.pos, ball) < range * range) pressers.add(p.id)
         })
       }
+    }
+
+    // counter-attack runners: the most advanced teammates sprint beyond the ball
+    const counterRunners = new Set<string>()
+    if (transition && transition.side === side && transition.counter && inPoss) {
+      ;[...mates]
+        .filter((p) => p.role !== 'GK' && p.id !== world.ball.ownerId)
+        .sort((a, b) => b.pos.y * dir - a.pos.y * dir)
+        .slice(0, 2)
+        .forEach((p) => counterRunners.add(p.id))
+    }
+    // caught in transition: the other team's shape reforms slowly
+    const reforming = transition && transition.side !== side
+    let sprintersBack: Set<string> | null = null
+    if (reforming) {
+      sprintersBack = new Set(
+        [...mates]
+          .filter((p) => p.role !== 'GK')
+          .sort((a, b) => dist2(a.pos, ball) - dist2(b.pos, ball))
+          .slice(0, 2)
+          .map((p) => p.id),
+      )
     }
 
     for (const p of mates) {
@@ -136,7 +197,26 @@ export function computeTargets(world: WorldState, setup: MatchSetup): Map<string
         continue
       }
 
-      out.set(p.id, shapedTarget(p, ball, dir, inPoss, tac, ctx))
+      // counter: sprint into the space beyond the ball
+      if (counterRunners.has(p.id)) {
+        out.set(p.id, v(clamp(p.pos.x * 0.85, -(PITCH.HALF_W - 3), PITCH.HALF_W - 3), clamp(p.pos.y + dir * 18, -(PITCH.HALF_L - 2), PITCH.HALF_L - 2)))
+        continue
+      }
+
+      const shaped = shapedTarget(p, ball, dir, inPoss, tac, ctx, off, mates, world)
+
+      // caught upfield while the opponent counters: the nearest two sprint
+      // back at full tilt, the rest reform gradually (shape takes seconds)
+      if (reforming && (p.pos.y - ball.y) * dir > 0) {
+        if (sprintersBack?.has(p.id)) {
+          out.set(p.id, v(p.anchor.x, p.anchor.y - dir * MENTALITY_DROP[tac.mentality]))
+        } else {
+          out.set(p.id, v(lerp(p.pos.x, shaped.x, 0.35), lerp(p.pos.y, shaped.y, 0.35)))
+        }
+        continue
+      }
+
+      out.set(p.id, shaped)
     }
   }
   return out
@@ -161,6 +241,9 @@ function shapedTarget(
   inPoss: boolean,
   tac: SideTactics,
   ctx: ShapeCtx,
+  off: OffBallCtx,
+  mates: SimPlayer[],
+  world: WorldState,
 ): Vec2 {
   let tx = p.anchor.x * ctx.width
   let ty = p.anchor.y
@@ -173,26 +256,78 @@ function shapedTarget(
   ty += inPoss ? dir * MENTALITY_PUSH[tac.mentality] * ctx.push : -dir * MENTALITY_DROP[tac.mentality] * ctx.drop
 
   switch (p.role) {
-    case 'Wing':
+    case 'Wing': {
       tx = inPoss ? Math.sign(p.anchor.x || 1) * (PITCH.HALF_W - 4) * Math.min(ctx.width, 1) : tx * 0.7
       if (inPoss) ty += dir * 6
+      // overlap/underlap interplay with the fullback on this flank
+      if (inPoss && off.owner && off.owner.role === 'FB' && Math.sign(off.owner.anchor.x) === Math.sign(p.anchor.x)) {
+        if (Math.abs(off.owner.pos.x) > 19) {
+          // fullback is wide on the ball → cut inside (underlap)
+          tx *= 0.45
+          ty += dir * 6
+        } else {
+          // fullback deeper → hold maximum width and depth
+          ty += dir * 3
+        }
+      }
       break
+    }
     case 'WM':
       tx = inPoss ? Math.sign(p.anchor.x || 1) * (PITCH.HALF_W - 7) : tx * 0.8
       break
-    case 'FB':
+    case 'FB': {
       if (inPoss && ball.y * dir > 6) ty += dir * 10 * ctx.push
+      // push right up in the final third; overlap a winger on the ball
+      if (inPoss && off.finalThird) ty += dir * 6
+      if (inPoss && off.owner && off.owner.role === 'Wing' && Math.sign(off.owner.anchor.x) === Math.sign(p.anchor.x)) {
+        ty = off.owner.pos.y + dir * 6 // overlap beyond the winger
+        tx = Math.sign(p.anchor.x || 1) * (PITCH.HALF_W - 2.5)
+        break
+      }
       tx = Math.sign(p.anchor.x || 1) * Math.min(Math.abs(tx) + (inPoss ? 4 : 0), PITCH.HALF_W - 3)
+      if (!inPoss) tx *= 0.78 // tuck in when defending
       break
-    case 'ST':
+    }
+    case 'ST': {
       if (inPoss) ty += dir * 7
       tx += (ball.x - tx) * 0.18
+      // timed runs in behind: when a midfielder carries the ball facing play,
+      // ride the offside line and burst beyond it in waves (pace times the run)
+      if (inPoss && off.ownerIsMid && !off.buildup) {
+        const phase = Math.sin(world.tick * (0.025 + p.attrs.pace * 0.0003) + p.number)
+        const lineY = off.oppLineY * dir // in attack frame
+        const hold = lineY - 0.8
+        const burst = lineY + (phase > 0.35 ? 2.5 + p.attrs.pace * 0.02 : 0)
+        ty = (phase > 0.35 ? burst : Math.max(ty * dir, hold)) * dir
+        if (p.archetype === 'targetman') ty = hold * dir // he pins the line instead
+      }
       break
-    case 'CAM':
+    }
+    case 'CAM': {
       if (inPoss) ty += dir * 4
+      // float into the pocket between their midfield and defensive lines
+      if (inPoss && !off.buildup) {
+        const pocketY = lerp(off.oppMidY, off.oppLineY, 0.55)
+        ty = lerp(ty, pocketY, 0.6)
+        tx += (ball.x > 0 ? -1 : 1) * 4 // drift into the far half-space
+      }
       break
+    }
+    case 'CM': {
+      // third-man instinct: after laying the ball off, move into new space
+      if (inPoss && p.kickCd > 0) ty += dir * 5
+      break
+    }
     case 'CDM':
       ty -= dir * 3
+      // buildup: drop between the centre-backs as the recycling option
+      if (inPoss && off.buildup) {
+        const cbs = mates.filter((m) => m.role === 'CB')
+        if (cbs.length >= 2) {
+          tx = (cbs[0].pos.x + cbs[1].pos.x) / 2
+          ty = (cbs[0].pos.y + cbs[1].pos.y) / 2 + dir * 5
+        }
+      }
       break
     case 'CB':
       tx += (ball.x - p.anchor.x) * 0.04
@@ -200,13 +335,37 @@ function shapedTarget(
   }
 
   // rapid attackers make runs in behind when their team has the ball upfield
-  if (inPoss && p.attrs.pace >= 85 && (p.role === 'ST' || p.role === 'Wing' || p.role === 'CAM')) {
+  if (inPoss && p.archetype === 'speedster' && (p.role === 'ST' || p.role === 'Wing' || p.role === 'CAM')) {
     if (ball.y * dir > -10) ty += dir * 4
+  }
+  // workhorses cover more ground toward the ball when defending
+  if (!inPoss && p.archetype === 'workhorse') {
+    ty += (ball.y - ty) * 0.12
+    tx += (ball.x - tx) * 0.08
   }
 
   tx = clamp(tx, -(PITCH.HALF_W - 1), PITCH.HALF_W - 1)
   ty = clamp(ty, -(PITCH.HALF_L - 1), PITCH.HALF_L - 1)
   return v(tx, ty)
+}
+
+// ── goal celebrations ────────────────────────────────────────────
+function celebrateTargets(world: WorldState, out: Map<string, Vec2>): void {
+  const scorer = byId(world, world.lastScorerId)
+  if (!scorer) return
+  const dir = attackDir(scorer.side)
+  // scorer wheels away toward the corner flag
+  const corner = v(Math.sign(scorer.pos.x || 1) * (PITCH.HALF_W - 3), targetGoalY(scorer.side) - dir * 6)
+  out.set(scorer.id, corner)
+  for (const p of onPitch(world)) {
+    if (p.id === scorer.id || p.role === 'GK') continue
+    if (p.side === scorer.side) {
+      // teammates mob the scorer
+      out.set(p.id, v(scorer.pos.x + (p.number % 5) - 2, scorer.pos.y - dir * ((p.number % 3) + 1)))
+    } else {
+      out.set(p.id, { ...p.anchor })
+    }
+  }
 }
 
 // ── set-piece routines ───────────────────────────────────────────

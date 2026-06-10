@@ -1,4 +1,5 @@
 import type { Attributes, Mentality, Pressing, TacticalRole } from '../data/types'
+import type { Archetype } from '../data/archetypes'
 
 export interface Vec2 {
   x: number
@@ -13,6 +14,8 @@ export interface SimPlayer {
   name: string
   number: number
   role: TacticalRole
+  /** Personality archetype derived from the dominant attribute. */
+  archetype: Archetype
   /** Authored formation anchor in metres, oriented to this side's attack. */
   anchor: Vec2
   pos: Vec2
@@ -72,14 +75,24 @@ export type Phase =
   | 'penalty'
   | 'celebrate'
   | 'halftime'
+  | 'shootout' // frozen, awaiting interactive penalty shootout resolution
   | 'fulltime'
 
 export interface Restart {
-  type: Exclude<Phase, 'open' | 'celebrate' | 'halftime' | 'fulltime'>
+  type: Exclude<Phase, 'open' | 'celebrate' | 'halftime' | 'shootout' | 'fulltime'>
   side: Side // team taking the restart
   pos: Vec2
   /** ticks remaining before play auto-resumes. */
   delay: number
+}
+
+/** Counter-attack window opened when possession switches in open play. */
+export interface Transition {
+  /** The side that just won the ball. */
+  side: Side
+  untilTick: number
+  /** True when 2+ attackers were ahead of the ball at the turnover. */
+  counter: boolean
 }
 
 export interface MatchStats {
@@ -162,7 +175,7 @@ export interface MatchSetup {
 export interface WorldState {
   tick: number
   timeSec: number
-  half: 1 | 2 | 3 | 4 // 3/4 = extra-time halves
+  half: 1 | 2
   added: number // stoppage seconds for current half
   score: { home: number; away: number }
   players: SimPlayer[]
@@ -170,10 +183,29 @@ export interface WorldState {
   phase: Phase
   restart: Restart | null
   celebrateUntil: number
+  /** Hidden momentum 0–100 per side (starts 50). Match-engine state only —
+   *  never persisted outside the simulation. */
+  momentum: { home: number; away: number }
+  /** Active counter-attack / shape-reform window, if any. */
+  transition: Transition | null
+  /** Scorer of the most recent goal (drives celebrations). */
+  lastScorerId: string | null
   stats: MatchStats
   finished: boolean
   /** Penalty shootout result, if used. */
   shootout?: { home: number; away: number }
+}
+
+/** One resolved penalty kick in a shootout. */
+export interface PenaltyKickResult {
+  takerId: string
+  takerName: string
+  side: Side
+  scored: boolean
+  outcome: 'goal' | 'save' | 'off'
+  /** -1 left, 0 centre, 1 right (shooter's perspective). */
+  shotDir: -1 | 0 | 1
+  diveDir: -1 | 0 | 1
 }
 
 export interface PlayerMatchRating {

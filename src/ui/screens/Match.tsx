@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGame } from '../../store/gameStore'
 import { getTeam } from '../../data'
-import { MatchController, type SpeedLevel } from '../../match/MatchController'
-import type { MatchEvent, Side, WorldState } from '../../engine/types'
+import { MatchController, type ShootoutKickView, type SpeedLevel } from '../../match/MatchController'
+import type { MatchEvent, Side, SimPlayer, WorldState } from '../../engine/types'
 import { PITCH } from '../../engine/constants'
 import { StatRow } from '../components/common'
 import { commentaryFor, TACTICAL_LINES } from '../../data/commentary'
@@ -14,6 +14,7 @@ interface Hud {
   home: number
   away: number
   possHome: number
+  momHome: number
   shotsH: number
   shotsA: number
   otH: number
@@ -22,6 +23,13 @@ interface Hud {
   foulsA: number
   dots: { x: number; y: number; c: string }[]
   ball: { x: number; y: number }
+}
+
+interface ShootoutUi {
+  phase: 'pick' | 'running'
+  kicks: ShootoutKickView[]
+  score: { home: number; away: number }
+  done: boolean
 }
 
 interface FeedLine {
@@ -50,6 +58,7 @@ export default function Match() {
   const [feed, setFeed] = useState<FeedLine[]>([])
   const [paused, setPaused] = useState(false)
   const [replaying, setReplaying] = useState(false)
+  const [shootout, setShootout] = useState<ShootoutUi | null>(null)
   const [weather, setWeather] = useState<string>('')
   const [speed, setSpeed] = useState<SpeedLevel>(1)
   const [camMode, setCamMode] = useState<'follow' | 'broadcast' | 'free'>('follow')
@@ -102,6 +111,11 @@ export default function Match() {
         }
       },
       onReplay: (active) => setReplaying(active),
+      onShootoutNeeded: () =>
+        setShootout({ phase: 'pick', kicks: [], score: { home: 0, away: 0 }, done: false }),
+      onShootoutKick: (kick) =>
+        setShootout((s) => (s ? { ...s, kicks: [...s.kicks, kick], score: kick.score } : s)),
+      onShootoutDone: (score) => setShootout((s) => (s ? { ...s, score, done: true } : s)),
       onFinished: () => {
         const result = ctrl.sim.getResult()
         finishUserMatch(result, ctrl.getReplays())
@@ -167,6 +181,13 @@ export default function Match() {
           <span className="text-lg sm:text-xl">{n.af}</span>
           <span className="ml-1 rounded bg-navy-800 px-2 py-0.5 font-mono text-xs text-accent-400 sm:ml-2">{minuteLabel}</span>
         </div>
+        {/* momentum bar — subtle, under the scoreboard */}
+        {hud && (
+          <div className="mx-auto mt-1 flex h-1 w-40 overflow-hidden rounded-full bg-navy-800/80" title="Momentum">
+            <div className="h-full transition-all duration-700" style={{ width: `${hud.momHome}%`, background: n.hc }} />
+            <div className="h-full flex-1 transition-all duration-700" style={{ background: n.ac, opacity: 0.85 }} />
+          </div>
+        )}
       </div>
 
       {/* Weather chip */}
@@ -238,6 +259,26 @@ export default function Match() {
         </button>
       </div>
 
+      {/* Penalty shootout */}
+      {shootout?.phase === 'pick' && ctrlRef.current && (
+        <ShootoutPicker
+          candidates={ctrlRef.current.sim.shootoutCandidates(sideRef.current)}
+          onConfirm={(order) => {
+            ctrlRef.current?.beginShootout(sideRef.current, order)
+            setShootout((s) => (s ? { ...s, phase: 'running' } : s))
+          }}
+        />
+      )}
+      {shootout?.phase === 'running' && (
+        <ShootoutBoard
+          kicks={shootout.kicks}
+          score={shootout.score}
+          done={shootout.done}
+          homeFlag={n.hf}
+          awayFlag={n.af}
+        />
+      )}
+
       {/* Pause / management overlay */}
       {paused && ctrlRef.current && (
         <PauseMenu
@@ -252,14 +293,121 @@ export default function Match() {
   )
 }
 
+/** Manager picks the 5 penalty takers, in order. */
+function ShootoutPicker({
+  candidates,
+  onConfirm,
+}: {
+  candidates: SimPlayer[]
+  onConfirm: (order: string[]) => void
+}) {
+  const [order, setOrder] = useState<string[]>([])
+  const toggle = (id: string) => {
+    setOrder((o) => (o.includes(id) ? o.filter((x) => x !== id) : o.length < 5 ? [...o, id] : o))
+  }
+  return (
+    <div className="absolute inset-0 z-20 flex items-center justify-center bg-navy-950/80 p-4 backdrop-blur-sm">
+      <div className="panel max-h-[88vh] w-full max-w-md overflow-y-auto p-5">
+        <h2 className="text-lg font-black">Penalty Shootout</h2>
+        <p className="text-steel-400 mt-1 text-xs">
+          Pick your 5 takers in shooting order. Tap to add, tap again to remove.
+        </p>
+        <div className="mt-3 space-y-1">
+          {candidates.map((p) => {
+            const idx = order.indexOf(p.id)
+            return (
+              <button
+                key={p.id}
+                onClick={() => toggle(p.id)}
+                className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm ${
+                  idx >= 0 ? 'bg-accent-500/20 ring-1 ring-accent-500' : 'hover:bg-navy-800'
+                }`}
+              >
+                <span className={`w-6 text-center font-black ${idx >= 0 ? 'text-accent-400' : 'text-steel-600'}`}>
+                  {idx >= 0 ? idx + 1 : '·'}
+                </span>
+                <span className="text-steel-500 w-6">{p.number}</span>
+                <span className="flex-1 truncate">{p.name}</span>
+                <span className="text-steel-400 text-xs">SHO {p.attrs.shooting}</span>
+                <span className="text-steel-500 text-[10px]">ST {Math.round(p.stamina)}%</span>
+              </button>
+            )
+          })}
+        </div>
+        <button className="btn-primary mt-4 w-full" disabled={order.length !== 5} onClick={() => onConfirm(order)}>
+          {order.length === 5 ? 'Begin Shootout →' : `Pick ${5 - order.length} more`}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/** Live shootout scoreboard: names, ✓/✗ per kick, running score. */
+function ShootoutBoard({
+  kicks,
+  score,
+  done,
+  homeFlag,
+  awayFlag,
+}: {
+  kicks: ShootoutKickView[]
+  score: { home: number; away: number }
+  done: boolean
+  homeFlag: string
+  awayFlag: string
+}) {
+  const row = (side: Side) => kicks.filter((k) => k.side === side)
+  const slots = Math.max(5, Math.ceil(kicks.length / 2))
+  const last = kicks[kicks.length - 1]
+  return (
+    <div className="pointer-events-none absolute left-1/2 top-16 z-10 w-[min(94vw,460px)] -translate-x-1/2">
+      <div className="rounded-xl border border-navy-700 bg-navy-950/90 p-3 backdrop-blur">
+        <div className="text-center text-xs font-bold uppercase tracking-widest text-accent-400">
+          {done ? 'Shootout decided' : 'Penalty shootout'}
+        </div>
+        <div className="mt-2 space-y-1.5">
+          {(['home', 'away'] as Side[]).map((side) => (
+            <div key={side} className="flex items-center gap-2">
+              <span className="w-7 text-lg">{side === 'home' ? homeFlag : awayFlag}</span>
+              <span className="w-6 text-center font-mono text-lg font-black">{score[side]}</span>
+              <div className="flex flex-1 gap-1.5">
+                {Array.from({ length: slots }, (_, i) => {
+                  const k = row(side)[i]
+                  return (
+                    <span
+                      key={i}
+                      className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-black ${
+                        !k ? 'bg-navy-800 text-steel-600' : k.scored ? 'bg-accent-500 text-navy-950' : 'bg-danger-500 text-white'
+                      }`}
+                    >
+                      {!k ? '·' : k.scored ? '✓' : '✗'}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        {last && (
+          <div className="text-steel-300 mt-2 text-center text-xs">
+            {last.takerName} — {last.scored ? 'SCORES!' : last.outcome === 'save' ? 'saved!' : 'misses!'}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function snapshot(w: WorldState, hc: string, ac: string): Hud {
   const totalPoss = w.stats.possessionTicks.home + w.stats.possessionTicks.away || 1
+  const momTotal = w.momentum.home + w.momentum.away || 1
   return {
     minute: Math.floor(w.timeSec / 60),
     half: w.half,
     home: w.score.home,
     away: w.score.away,
     possHome: Math.round((w.stats.possessionTicks.home / totalPoss) * 100),
+    momHome: Math.round((w.momentum.home / momTotal) * 100),
     shotsH: w.stats.shots.home,
     shotsA: w.stats.shots.away,
     otH: w.stats.onTarget.home,

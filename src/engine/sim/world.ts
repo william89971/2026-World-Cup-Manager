@@ -1,5 +1,6 @@
 import { getFormation } from '../formations'
 import { PITCH } from '../constants'
+import { archetypeOf } from '../../data/archetypes'
 import type { MatchSetup, Side, SimPlayer, Vec2, WorldState } from '../types'
 import { v } from '../util'
 
@@ -28,16 +29,18 @@ export function createWorld(setup: MatchSetup, kickoffSide: Side = 'home'): Worl
       const rec = team.players[id]
       const slot = formation.slots[i] ?? formation.slots[formation.slots.length - 1]
       const anchor = orientAnchor(slot.x, slot.y, side)
+      const attrs = rec?.attrs ?? { pace: 70, shooting: 70, passing: 70, dribbling: 70, defending: 70, physicality: 70 }
       players.push({
         id,
         side,
         name: rec?.name ?? id,
         number: rec?.number ?? i + 1,
         role: slot.role,
+        archetype: archetypeOf(attrs),
         anchor,
         pos: { ...anchor },
         vel: v(0, 0),
-        attrs: rec?.attrs ?? { pace: 70, shooting: 70, passing: 70, dribbling: 70, defending: 70, physicality: 70 },
+        attrs,
         overall: rec?.overall ?? 70,
         stamina: 100,
         onPitch: true,
@@ -79,6 +82,9 @@ export function createWorld(setup: MatchSetup, kickoffSide: Side = 'home'): Worl
     phase: 'kickoff',
     restart: null,
     celebrateUntil: 0,
+    momentum: { home: 50, away: 50 },
+    transition: null,
+    lastScorerId: null,
     stats: {
       shots: { home: 0, away: 0 },
       onTarget: { home: 0, away: 0 },
@@ -118,4 +124,17 @@ export function nearestPlayer(world: WorldState, point: Vec2, side?: Side): SimP
 export function possessionSide(world: WorldState): Side | null {
   const owner = byId(world, world.ball.ownerId)
   return owner ? owner.side : null
+}
+
+/** Shift a side's momentum (0–100); the opposition moves half as far the other way. */
+export function shiftMomentum(world: WorldState, side: Side, amount: number): void {
+  const m = world.momentum
+  m[side] = Math.max(0, Math.min(100, m[side] + amount))
+  const opp = other(side)
+  m[opp] = Math.max(0, Math.min(100, m[opp] - amount * 0.5))
+}
+
+/** ±factor scalers derived from momentum (50 = neutral). */
+export function momentumOf(world: WorldState, side: Side): number {
+  return world.momentum[side]
 }
