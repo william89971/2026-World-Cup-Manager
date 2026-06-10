@@ -27,6 +27,8 @@ import {
   type NewsItem,
 } from '../game/career'
 import type { GoalReplay } from '../match/replay'
+import { writeSave, loadSave, clearSave } from '../game/saveGame'
+import type { SavedGame } from '../types/save'
 
 export type Screen = 'menu' | 'hub' | 'squad' | 'tactics' | 'prematch' | 'match' | 'postmatch' | 'groups' | 'bracket' | 'stats'
 
@@ -92,6 +94,12 @@ interface GameState {
   eliminated: boolean
 
   newGame: (teamId: string, difficulty: Difficulty) => void
+  /** Resume the saved campaign. Returns false if no valid save exists. */
+  continueGame: () => boolean
+  /** Write the current campaign to the save slot. */
+  saveNow: () => void
+  /** Save and return to the main menu. */
+  saveAndExit: () => void
   setScreen: (s: Screen) => void
   setTactics: (t: Tactics) => void
   ensureTactics: () => Tactics
@@ -100,6 +108,20 @@ interface GameState {
   finishUserMatch: (result: MatchResult, replays?: GoalReplay[]) => void
   simRestOfTournament: () => void
   applyPress: (moraleDelta: number, reputationDelta: number) => void
+}
+
+/** Snapshot the persistable slice of the store. */
+function toSavedGame(s: Pick<GameState, 'userTeamId' | 'difficulty' | 'tournament' | 'career' | 'tactics' | 'reputation' | 'news' | 'eliminated'>): SavedGame {
+  return {
+    userTeamId: s.userTeamId,
+    difficulty: s.difficulty,
+    tournament: s.tournament,
+    career: s.career,
+    tactics: s.tactics,
+    reputation: s.reputation,
+    news: s.news,
+    eliminated: s.eliminated,
+  }
 }
 
 export const useGame = create<GameState>((set, get) => ({
@@ -138,6 +160,40 @@ export const useGame = create<GameState>((set, get) => ({
       lastReplays: [],
       eliminated: false,
     })
+    writeSave(toSavedGame(get()))
+  },
+
+  continueGame: () => {
+    const r = loadSave()
+    if (r.kind !== 'ok') return false
+    const s = r.data.state
+    // re-seed the session RNG the same way newGame does for this team
+    rng = makeRng(20260611 ^ s.userTeamId.charCodeAt(0) * 131 ^ s.userTeamId.charCodeAt(2))
+    set({
+      started: true,
+      screen: 'hub',
+      userTeamId: s.userTeamId,
+      difficulty: s.difficulty,
+      tournament: s.tournament,
+      career: s.career,
+      tactics: s.tactics,
+      reputation: s.reputation,
+      news: s.news,
+      eliminated: s.eliminated,
+      lastResult: null,
+      lastResultFixtureId: null,
+      lastReplays: [],
+    })
+    return true
+  },
+
+  saveNow: () => {
+    writeSave(toSavedGame(get()))
+  },
+
+  saveAndExit: () => {
+    writeSave(toSavedGame(get()))
+    set({ screen: 'menu', started: false })
   },
 
   setScreen: (s) => set({ screen: s }),
@@ -246,6 +302,7 @@ export const useGame = create<GameState>((set, get) => ({
       lastReplays: replays,
       eliminated: eliminated || state.eliminated,
     })
+    writeSave(toSavedGame(get())) // auto-save after every completed match
   },
 
   simRestOfTournament: () => {
@@ -272,6 +329,7 @@ export const useGame = create<GameState>((set, get) => ({
     const champ = champion(tournament)
     if (champ) news.unshift({ id: 'champ', kind: 'milestone', text: `🏆 ${getTeam(champ).flag} ${getTeam(champ).name} are 2026 World Cup champions!` })
     set({ tournament, career: { ...career }, news: [...news, ...state.news].slice(0, 80) })
+    writeSave(toSavedGame(get()))
   },
 
   applyPress: (moraleDelta, reputationDelta) => {
@@ -281,8 +339,11 @@ export const useGame = create<GameState>((set, get) => ({
       if (career[p.id]) career[p.id] = { ...career[p.id], morale: clampN(career[p.id].morale + moraleDelta, 0, 100) }
     }
     set({ career, reputation: clampN(state.reputation + reputationDelta, 0, 100) })
+    writeSave(toSavedGame(get())) // auto-save after every press conference
   },
 }))
+
+export { clearSave }
 
 // ── helpers ──────────────────────────────────────────────────────
 function clampN(n: number, lo: number, hi: number) {

@@ -10,6 +10,7 @@ export default function Hub() {
   const { userTeamId, tournament, career, news, eliminated } = useGame()
   const setScreen = useGame((s) => s.setScreen)
   const simRest = useGame((s) => s.simRestOfTournament)
+  const saveAndExit = useGame((s) => s.saveAndExit)
   const fixture = useGame((s) => s.userFixture)()
   const team = getTeam(userTeamId)
 
@@ -103,6 +104,9 @@ export default function Hub() {
           )}
           <button className="btn-ghost mt-4 w-full" onClick={() => setScreen('squad')}>
             View Full Squad
+          </button>
+          <button className="btn-ghost mt-2 w-full text-xs" onClick={saveAndExit}>
+            💾 Save & Exit
           </button>
         </div>
 

@@ -1,14 +1,35 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useGame } from '../../store/gameStore'
 import { GROUPS } from '../../data/draw2026'
 import { TEAMS } from '../../data'
 import { DIFFICULTIES } from '../../game/difficulty'
+import { loadSave, saveSummary, clearSave } from '../../game/saveGame'
 import type { Difficulty } from '../../data/types'
 
 export default function MainMenu() {
   const newGame = useGame((s) => s.newGame)
+  const continueGame = useGame((s) => s.continueGame)
   const [selected, setSelected] = useState<string | null>(null)
   const [difficulty, setDifficulty] = useState<Difficulty>('Professional')
+  const [confirmOverwrite, setConfirmOverwrite] = useState(false)
+  const [saveTick, setSaveTick] = useState(0) // bump after clearing a save
+
+  const save = useMemo(() => loadSave(), [saveTick])
+  const summary = useMemo(() => saveSummary(), [saveTick])
+
+  const start = () => {
+    if (!selected) return
+    if (save.kind === 'ok') {
+      setConfirmOverwrite(true)
+      return
+    }
+    newGame(selected, difficulty)
+  }
+
+  const dismissBrokenSave = () => {
+    clearSave()
+    setSaveTick((t) => t + 1)
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -19,6 +40,40 @@ export default function MainMenu() {
         </h1>
         <p className="text-steel-400 mt-2 text-sm">Choose your nation. 48 teams. One trophy.</p>
       </div>
+
+      {/* Saved campaign slot */}
+      {save.kind === 'ok' && summary && (
+        <div className="mx-auto mb-3 w-full max-w-2xl px-6">
+          <div className="panel flex flex-wrap items-center gap-3 p-3 sm:gap-4 sm:p-4">
+            <span className="text-3xl">{summary.flag}</span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-bold">{summary.teamName} — {summary.roundLabel}</div>
+              <div className="text-steel-400 text-xs">
+                {summary.record.won}W {summary.record.drawn}D {summary.record.lost}L · saved {formatSavedAt(summary.savedAt)}
+              </div>
+            </div>
+            <button className="btn-primary px-5" onClick={() => continueGame()}>
+              Continue Tournament →
+            </button>
+          </div>
+        </div>
+      )}
+      {(save.kind === 'version-mismatch' || save.kind === 'corrupt') && (
+        <div className="mx-auto mb-3 w-full max-w-2xl px-6">
+          <div className="panel flex flex-wrap items-center gap-3 border-warn-500/40 p-4">
+            <span className="text-2xl">⚠️</span>
+            <div className="min-w-0 flex-1 text-sm">
+              <div className="font-bold">Saved tournament can't be loaded</div>
+              <div className="text-steel-400 text-xs">
+                {save.kind === 'version-mismatch'
+                  ? `It was created by an older version of the game (save v${save.foundVersion}).`
+                  : 'The save data appears to be corrupted.'}
+              </div>
+            </div>
+            <button className="btn-ghost text-xs" onClick={dismissBrokenSave}>Clear save</button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto px-6 pb-4">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -78,12 +133,37 @@ export default function MainMenu() {
                 </div>
               </div>
             )}
-            <button disabled={!selected} className="btn-primary px-8 py-3 text-base" onClick={() => selected && newGame(selected, difficulty)}>
+            <button disabled={!selected} className="btn-primary px-8 py-3 text-base" onClick={start}>
               Start Campaign
             </button>
           </div>
         </div>
       </div>
+
+      {/* overwrite confirmation */}
+      {confirmOverwrite && selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/80 p-4 backdrop-blur-sm">
+          <div className="panel w-full max-w-md p-6">
+            <h2 className="text-lg font-black">Overwrite saved tournament?</h2>
+            <p className="text-steel-300 mt-2 text-sm">
+              This will overwrite your saved tournament
+              {summary ? ` (${summary.flag} ${summary.teamName}, ${summary.roundLabel})` : ''}. Are you sure?
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button className="btn-ghost" onClick={() => setConfirmOverwrite(false)}>Cancel</button>
+              <button className="btn-primary" onClick={() => newGame(selected, difficulty)}>
+                Start New Game
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
+}
+
+function formatSavedAt(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return 'recently'
+  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
