@@ -245,7 +245,10 @@ export class MatchController {
       const ev = evs[this.eventCursor]
       if ((ev.type === 'kickoff' || ev.type === 'halftime') && this.speed === 1) {
         this.renderer.cinematicPan()
+        // big occasions: the crowd does a full stadium wave before kick-off
+        if (ev.type === 'kickoff' && this.sim.setup.occasion?.wave) this.renderer.stadiumWave()
       }
+      if (ev.type === 'tackle') this.renderer.triggerTackle(ev.playerId)
       if (ev.type === 'goal' && ev.pos) {
         this.renderer.cutTo(ev.pos.x, ev.pos.y)
         // bank the last ~8 seconds and queue the cinematic replay

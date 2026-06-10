@@ -15,6 +15,23 @@ interface Figure {
   prevKickCd: number
 }
 
+/** Perceptual-ish distance between two hex colours (kit clash check). */
+function colorDistance(a: string, b: string): number {
+  const pa = parseInt(a.replace('#', ''), 16)
+  const pb = parseInt(b.replace('#', ''), 16)
+  const dr = ((pa >> 16) & 255) - ((pb >> 16) & 255)
+  const dg = ((pa >> 8) & 255) - ((pb >> 8) & 255)
+  const db = (pa & 255) - (pb & 255)
+  return Math.sqrt(dr * dr * 2 + dg * dg * 4 + db * db)
+}
+
+/** Stable small hash for per-team badge variants. */
+function teamSeed(id: string): number {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
+  return h
+}
+
 interface ActiveReplay {
   frames: ReplayFrame[]
   t: number
@@ -63,6 +80,9 @@ export class MatchRenderer {
   private shootoutStage = false
   private penalty: PenaltySeq | null = null
   private standSpots = new Map<string, { x: number; z: number }>()
+  /** Away side wears its second kit when the primaries clash. */
+  private awaySecondKit: boolean
+  private shotLive = false
   readonly weather: Weather
 
   constructor(container: HTMLElement, setup: MatchSetup) {
@@ -96,9 +116,11 @@ export class MatchRenderer {
     c.left = -70; c.right = 70; c.top = 90; c.bottom = -90; c.near = 1; c.far = 220
     this.scene.add(sun)
 
-    this.stadium = new Stadium(preset.pitchShade)
+    this.stadium = new Stadium(preset.pitchShade, setup.occasion?.density ?? 1)
     this.scene.add(this.stadium.group)
     this.scene.add(this.ball.group)
+
+    this.awaySecondKit = colorDistance(setup.home.kit.primary, setup.away.kit.primary) < 130
 
     if (this.weather === 'rain') this.buildRain()
 
@@ -139,10 +161,16 @@ export class MatchRenderer {
     attr.needsUpdate = true
   }
 
-  private kitFor(side: Side, role: string): { shirt: string; shorts: string } {
-    const kit = side === 'home' ? this.setup.home.kit : this.setup.away.kit
-    if (role === 'GK') return { shirt: kit.goalkeeper, shorts: kit.goalkeeper }
-    return { shirt: kit.primary, shorts: kit.secondary }
+  private kitFor(side: Side, role: string): { shirt: string; shorts: string; sock: string; badgeAccent: string; badgeSeed: number } {
+    const team = side === 'home' ? this.setup.home : this.setup.away
+    const kit = team.kit
+    const seed = teamSeed(team.teamId)
+    if (role === 'GK')
+      return { shirt: kit.goalkeeper, shorts: kit.goalkeeper, sock: kit.goalkeeper, badgeAccent: kit.primary, badgeSeed: seed }
+    // away changes into its second kit when the primaries are too similar
+    const shirt = side === 'away' && this.awaySecondKit ? kit.secondary : kit.primary
+    const shorts = side === 'away' && this.awaySecondKit ? kit.primary : kit.secondary
+    return { shirt, shorts, sock: shirt, badgeAccent: shorts, badgeSeed: seed }
   }
 
   private ensure(p: SimPlayer): Figure {
@@ -154,6 +182,17 @@ export class MatchRenderer {
       this.figures.set(p.id, f)
     }
     return f
+  }
+
+  /** Slide-tackle animation on the named player (driven by engine events). */
+  triggerTackle(playerId: string | undefined) {
+    if (!playerId) return
+    this.figures.get(playerId)?.h.triggerTackle()
+  }
+
+  /** Big-occasion stadium wave (semi-final / final kick-offs). */
+  stadiumWave() {
+    this.stadium.startWave()
   }
 
   // ── goal replay playback ────────────────────────────────────────
@@ -345,7 +384,9 @@ export class MatchRenderer {
 
   /** Sync visuals to the latest engine world for one rendered frame. */
   update(world: WorldState, dt: number) {
-    this.stadium.update(dt)
+    // crowd stirs when the ball enters either attacking third
+    const excitement = Math.abs(world.ball.pos.y) > PITCH.HALF_L / 3 ? 1 : 0
+    this.stadium.update(dt, this.shootoutStage || this.replay ? 1 : excitement)
     this.updateRain(dt)
 
     if (this.shootoutStage) {
@@ -358,6 +399,26 @@ export class MatchRenderer {
       this.renderer.render(this.scene, this.cam.camera)
       return
     }
+
+    // goalkeeper dives at incoming shots (outcome pre-decided by the engine —
+    // on goals the keeper often picked the wrong way, so dive opposite)
+    const shotIncoming = !!world.ball.inFlight && !!world.ball.shotOutcome
+    if (shotIncoming && !this.shotLive) {
+      this.shotLive = true
+      const shooter = world.players.find((p) => p.id === world.ball.shooterId)
+      const gk = world.players.find((p) => p.side !== shooter?.side && p.role === 'GK' && p.onPitch)
+      if (gk) {
+        const fig = this.figures.get(gk.id)
+        const toward = Math.sign(world.ball.vel.x) || 1
+        const dir = world.ball.shotOutcome === 'goal' && Math.random() < 0.6 ? -toward : toward
+        fig?.h.triggerDive(dir as -1 | 1)
+      }
+    } else if (!shotIncoming) {
+      this.shotLive = false
+    }
+
+    const celebrating = world.phase === 'celebrate'
+    const scorer = celebrating ? world.players.find((p) => p.id === world.lastScorerId) : undefined
 
     for (const p of world.players) {
       const f = this.figures.get(p.id)
@@ -374,6 +435,8 @@ export class MatchRenderer {
       if (speed > 0.3) fig.facing = Math.atan2(p.vel.x, p.vel.y)
       if (p.kickCd > fig.prevKickCd) fig.h.triggerKick()
       fig.prevKickCd = p.kickCd
+      // arms aloft for the scoring side while the celebration plays
+      fig.h.setCelebrating(celebrating && !!scorer && p.side === scorer.side && p.role !== 'GK')
       fig.h.update(speed, fig.facing, dt)
     }
 

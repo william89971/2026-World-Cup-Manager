@@ -191,18 +191,23 @@ interface CrowdSeat {
   z: number
   phase: number
   hue: number
+  /** Polar angle around the pitch — drives the travelling wave. */
+  angle: number
 }
 
-/** Instanced crowd that sways during play and leaps when a goal goes in. */
+/** Instanced crowd: sways with the play, leaps on goals, does the wave. */
 class Crowd {
   readonly mesh: THREE.InstancedMesh
   private seats: CrowdSeat[] = []
   private dummy = new THREE.Object3D()
   private time = 0
   private cheer = 0 // >0 while celebrating (seconds remaining)
+  private waveT = -1 // wave progress in radians travelled (-1 = inactive)
   private color = new THREE.Color()
 
-  constructor(count = 4000) {
+  /** @param density 0–1 fill (group stage 0.7 → final 1.0) */
+  constructor(density = 1) {
+    const count = Math.round(4000 * Math.max(0.3, Math.min(1, density)))
     const geo = new THREE.BoxGeometry(0.4, 0.7, 0.4)
     const mat = new THREE.MeshStandardMaterial({ roughness: 1 })
     this.mesh = new THREE.InstancedMesh(geo, mat, count)
@@ -210,6 +215,8 @@ class Crowd {
     const ringX = PITCH.HALF_W + 8
     const ringZ = PITCH.HALF_L + 8
     const rnd = (n: number) => ((Math.sin(n * 12.9898) * 43758.5453) % 1 + 1) % 1
+    // later rounds bring more colour to the stands
+    const sat = density >= 1 ? 0.8 : density >= 0.85 ? 0.65 : 0.5
     for (let i = 0; i < count; i++) {
       const edge = i % 4
       const r = rnd(i)
@@ -221,12 +228,19 @@ class Crowd {
       else if (edge === 2) { x = -(ringX + r2 * spread); z = (r - 0.5) * (ringZ * 2) }
       else { x = ringX + r2 * spread; z = (r - 0.5) * (ringZ * 2) }
       const tier = Math.floor(r2 * 3)
-      const seat: CrowdSeat = { x, y: 1.5 + tier * 4 + r * 1.5, z, phase: rnd(i + 7) * Math.PI * 2, hue: rnd(i + 7) }
+      const seat: CrowdSeat = {
+        x,
+        y: 1.5 + tier * 4 + r * 1.5,
+        z,
+        phase: rnd(i + 7) * Math.PI * 2,
+        hue: rnd(i + 7),
+        angle: Math.atan2(z, x),
+      }
       this.seats.push(seat)
       this.dummy.position.set(x, seat.y, z)
       this.dummy.updateMatrix()
       this.mesh.setMatrixAt(i, this.dummy.matrix)
-      this.color.setHSL(seat.hue, 0.5, 0.45 + rnd(i + 3) * 0.3)
+      this.color.setHSL(seat.hue, sat, 0.45 + rnd(i + 3) * 0.3)
       this.mesh.setColorAt(i, this.color)
     }
   }
@@ -235,20 +249,44 @@ class Crowd {
     this.cheer = 2.4
   }
 
-  /** Animate a rotating slice of seats each frame (cheap, full-stadium effect). */
-  update(dt: number) {
+  /** Kick off a full-stadium wave (two laps). */
+  startWave() {
+    this.waveT = 0
+  }
+
+  get waving(): boolean {
+    return this.waveT >= 0
+  }
+
+  /** @param excitement 0–1: home side attacking raises the sway amplitude */
+  update(dt: number, excitement = 0) {
     this.time += dt
     const cheering = this.cheer > 0
     if (cheering) this.cheer -= dt
+    const waving = this.waveT >= 0
+    if (waving) {
+      this.waveT += dt * 2.4 // radians/sec around the bowl
+      if (this.waveT > Math.PI * 4) this.waveT = -1 // two laps then done
+    }
+
     const total = this.seats.length
-    const slice = cheering ? 1400 : 400
-    const start = ((Math.floor(this.time * 47) * slice) % total + total) % total
+    // the wave animates every seat; otherwise a rotating slice keeps cost low
+    const slice = waving ? total : cheering ? 1400 : 400
+    const start = waving ? 0 : ((Math.floor(this.time * 47) * slice) % total + total) % total
+    const swayAmp = 0.07 * (1 + excitement * 1.6)
     for (let k = 0; k < slice; k++) {
       const i = (start + k) % total
       const s = this.seats[i]
-      const bob = cheering
-        ? Math.max(0, Math.sin(this.time * 9 + s.phase)) * 0.55 // jumping
-        : Math.sin(this.time * 1.6 + s.phase) * 0.07 // gentle sway
+      let bob: number
+      if (waving) {
+        // travelling pulse: stand as the wave passes your section
+        const d = ((s.angle - this.waveT) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)
+        bob = d < 0.7 ? Math.sin((1 - d / 0.7) * Math.PI) * 0.9 : 0
+      } else if (cheering) {
+        bob = Math.max(0, Math.sin(this.time * 9 + s.phase)) * 0.55 // jumping
+      } else {
+        bob = Math.sin(this.time * 1.6 + s.phase) * swayAmp // sway with the play
+      }
       this.dummy.position.set(s.x, s.y + bob, s.z)
       this.dummy.rotation.y = cheering ? Math.sin(this.time * 5 + s.phase) * 0.3 : 0
       this.dummy.updateMatrix()
@@ -268,8 +306,9 @@ export class Stadium {
   readonly group = new THREE.Group()
   private crowd: Crowd
 
-  /** @param pitchShade 1 = normal turf, <1 darker (overcast / rain) */
-  constructor(pitchShade = 1) {
+  /** @param pitchShade 1 = normal turf, <1 darker (overcast / rain)
+   *  @param crowdDensity 0–1 fill scaling with the round */
+  constructor(pitchShade = 1, crowdDensity = 1) {
     const tex = makePitchTexture(pitchShade)
     const grass = new THREE.Mesh(
       new THREE.PlaneGeometry(PITCH.W, PITCH.L),
@@ -288,7 +327,7 @@ export class Stadium {
     apron.position.y = -0.02
     this.group.add(apron)
 
-    this.crowd = new Crowd()
+    this.crowd = new Crowd(crowdDensity)
     this.group.add(buildGoal(1), buildGoal(-1), buildCornerFlags(), buildStands(), buildFloodlights(), this.crowd.mesh)
   }
 
@@ -297,7 +336,12 @@ export class Stadium {
     this.crowd.celebrate()
   }
 
-  update(dt: number) {
-    this.crowd.update(dt)
+  /** Full-stadium wave (big-occasion kick-offs). */
+  startWave() {
+    this.crowd.startWave()
+  }
+
+  update(dt: number, excitement = 0) {
+    this.crowd.update(dt, excitement)
   }
 }

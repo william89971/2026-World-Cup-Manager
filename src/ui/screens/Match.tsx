@@ -59,6 +59,16 @@ export default function Match() {
   const [paused, setPaused] = useState(false)
   const [replaying, setReplaying] = useState(false)
   const [shootout, setShootout] = useState<ShootoutUi | null>(null)
+  const [intro, setIntro] = useState(true)
+  const [goalFlash, setGoalFlash] = useState<string | null>(null)
+  const [cardFlash, setCardFlash] = useState<{ side: Side; red: boolean } | null>(null)
+  const [htStats, setHtStats] = useState(false)
+  const [ftHold, setFtHold] = useState(false)
+  const occasionRef = useRef<{ roundLabel: string; stadium: string; city: string } | null>(null)
+  const goalTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cardTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const htTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const ftTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [weather, setWeather] = useState<string>('')
   const [speed, setSpeed] = useState<SpeedLevel>(1)
   const [camMode, setCamMode] = useState<'follow' | 'broadcast' | 'free'>('follow')
@@ -98,6 +108,22 @@ export default function Match() {
       },
       onEvent: (ev) => {
         showBanner(ev)
+        // broadcast scoreboard reactions
+        if (ev.type === 'goal' && ev.playerName) {
+          setGoalFlash(`⚽ ${ev.playerName} ${Math.max(1, Math.ceil(ev.timeSec / 60))}'`)
+          if (goalTimer.current) clearTimeout(goalTimer.current)
+          goalTimer.current = setTimeout(() => setGoalFlash(null), 4500)
+        }
+        if ((ev.type === 'yellow' || ev.type === 'red') && ev.side) {
+          setCardFlash({ side: ev.side, red: ev.type === 'red' })
+          if (cardTimer.current) clearTimeout(cardTimer.current)
+          cardTimer.current = setTimeout(() => setCardFlash(null), 3000)
+        }
+        if (ev.type === 'halftime') {
+          setHtStats(true)
+          if (htTimer.current) clearTimeout(htTimer.current)
+          htTimer.current = setTimeout(() => setHtStats(false), 4000)
+        }
         const teamName = ev.side === 'away' ? awayName : homeName
         const oppName = ev.side === 'away' ? homeName : awayName
         const line = commentaryFor(ev, {
@@ -117,20 +143,28 @@ export default function Match() {
         setShootout((s) => (s ? { ...s, kicks: [...s.kicks, kick], score: kick.score } : s)),
       onShootoutDone: (score) => setShootout((s) => (s ? { ...s, score, done: true } : s)),
       onFinished: () => {
-        const result = ctrl.sim.getResult()
-        finishUserMatch(result, ctrl.getReplays())
-        setScreen('postmatch')
+        // hold a full-time result graphic before leaving the stadium
+        setFtHold(true)
+        ftTimer.current = setTimeout(() => {
+          const result = ctrl.sim.getResult()
+          finishUserMatch(result, ctrl.getReplays())
+          setScreen('postmatch')
+        }, 3000)
       },
     })
     ctrlRef.current = ctrl
+    occasionRef.current = setup.occasion ?? null
     setWeather(WEATHER_LABEL[ctrl.renderer.weather])
     ctrl.setSpeed(1)
     ctrl.start()
+    const introTimer = setTimeout(() => setIntro(false), 3400)
 
     const onResize = () => ctrl.resize()
     window.addEventListener('resize', onResize)
     return () => {
       window.removeEventListener('resize', onResize)
+      clearTimeout(introTimer)
+      for (const t of [goalTimer, cardTimer, htTimer, ftTimer]) if (t.current) clearTimeout(t.current)
       ctrl.dispose()
       ctrlRef.current = null
     }
@@ -171,19 +205,40 @@ export default function Match() {
     <div className="relative h-full w-full overflow-hidden">
       <div ref={containerRef} className="absolute inset-0" />
 
-      {/* Top scoreboard */}
-      <div className="pointer-events-none absolute left-1/2 top-3 z-10 -translate-x-1/2">
-        <div className="flex items-center gap-2 rounded-xl border border-navy-700 bg-navy-950/85 px-3 py-1.5 backdrop-blur sm:gap-3 sm:px-4 sm:py-2">
-          <span className="text-lg sm:text-xl">{n.hf}</span>
-          <span className="font-mono text-xl font-black tabular-nums sm:text-2xl">
-            {hud?.home ?? 0}<span className="text-steel-500 mx-1">:</span>{hud?.away ?? 0}
-          </span>
-          <span className="text-lg sm:text-xl">{n.af}</span>
-          <span className="ml-1 rounded bg-navy-800 px-2 py-0.5 font-mono text-xs text-accent-400 sm:ml-2">{minuteLabel}</span>
+      {/* Broadcast lower-third scoreboard */}
+      <div className="pointer-events-none absolute bottom-3 left-1/2 z-10 -translate-x-1/2">
+        {goalFlash && (
+          <div className="feed-enter mb-1.5 text-center">
+            <span className="rounded-full bg-accent-500 px-4 py-1 text-xs font-black uppercase tracking-wide text-navy-950 shadow-lg">
+              {goalFlash}
+            </span>
+          </div>
+        )}
+        <div className={`flex items-stretch overflow-hidden rounded-lg border border-navy-600/70 bg-navy-950/92 shadow-2xl backdrop-blur ${goalFlash ? 'animate-pulse' : ''}`}>
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 sm:gap-2 sm:px-3">
+            <span className="text-base sm:text-lg">{n.hf}</span>
+            <span className="text-xs font-black tracking-wider sm:text-sm">{n.hn}</span>
+            {cardFlash?.side === 'home' && (
+              <span className={`h-3.5 w-2.5 animate-pulse rounded-[2px] ${cardFlash.red ? 'bg-danger-500' : 'bg-warn-500'}`} />
+            )}
+          </div>
+          <div className="flex items-center bg-white/95 px-2.5 font-mono text-base font-black tabular-nums text-navy-950 sm:px-3 sm:text-lg">
+            {hud?.home ?? 0}<span className="mx-1 opacity-50">–</span>{hud?.away ?? 0}
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 sm:gap-2 sm:px-3">
+            {cardFlash?.side === 'away' && (
+              <span className={`h-3.5 w-2.5 animate-pulse rounded-[2px] ${cardFlash.red ? 'bg-danger-500' : 'bg-warn-500'}`} />
+            )}
+            <span className="text-xs font-black tracking-wider sm:text-sm">{n.an}</span>
+            <span className="text-base sm:text-lg">{n.af}</span>
+          </div>
+          <div className="flex items-center border-l border-navy-700 bg-navy-900/80 px-2 font-mono text-xs font-bold text-accent-400 sm:px-2.5">
+            {minuteLabel}
+          </div>
         </div>
-        {/* momentum bar — subtle, under the scoreboard */}
+        {/* momentum strip */}
         {hud && (
-          <div className="mx-auto mt-1 flex h-1 w-40 overflow-hidden rounded-full bg-navy-800/80" title="Momentum">
+          <div className="mt-1 flex h-[3px] overflow-hidden rounded-full bg-navy-800/80" title="Momentum">
             <div className="h-full transition-all duration-700" style={{ width: `${hud.momHome}%`, background: n.hc }} />
             <div className="h-full flex-1 transition-all duration-700" style={{ background: n.ac, opacity: 0.85 }} />
           </div>
@@ -242,10 +297,10 @@ export default function Match() {
         </div>
       )}
 
-      {/* Bottom controls */}
-      <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-xl border border-navy-700 bg-navy-950/85 px-2 py-1.5 backdrop-blur sm:gap-2 sm:px-3 sm:py-2">
+      {/* Controls (bottom-right, clear of the broadcast scoreboard) */}
+      <div className="absolute bottom-16 right-3 z-10 flex items-center gap-1.5 rounded-xl border border-navy-700 bg-navy-950/85 px-2 py-1.5 backdrop-blur sm:bottom-3 sm:gap-2 sm:px-3 sm:py-2">
         <button className="btn-ghost px-2 py-1.5 sm:px-3" onClick={togglePause}>
-          {paused ? '▶' : '⏸'}<span className="hidden sm:inline">{paused ? ' Resume' : ' Manage'}</span>
+          {paused ? '▶' : '⏸'}<span className="hidden md:inline">{paused ? ' Resume' : ' Manage'}</span>
         </button>
         <div className="flex overflow-hidden rounded-lg border border-navy-600">
           {SPEEDS.map((s) => (
@@ -255,9 +310,66 @@ export default function Match() {
           ))}
         </div>
         <button className="btn-ghost px-2 py-1.5 capitalize sm:px-3" onClick={cycleCam}>
-          📷<span className="hidden sm:inline"> {camMode}</span>
+          📷<span className="hidden md:inline"> {camMode}</span>
         </button>
       </div>
+
+      {/* Match intro: stadium + occasion */}
+      {intro && (
+        <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center bg-navy-950/85 backdrop-blur-sm" style={{ animation: 'screen-in 0.5s ease-out both' }}>
+          <div className="text-accent-400 text-xs font-black uppercase tracking-[0.5em] sm:text-sm">
+            {occasionRef.current?.roundLabel ?? 'World Cup 2026'}
+          </div>
+          <div className="mt-4 flex items-center gap-6 text-3xl font-black sm:gap-10 sm:text-5xl">
+            <span>{n.hf}</span>
+            <span className="text-steel-400 text-xl sm:text-2xl">vs</span>
+            <span>{n.af}</span>
+          </div>
+          <div className="mt-2 text-lg font-bold sm:text-xl">{n.hn} — {n.an}</div>
+          {occasionRef.current && (
+            <div className="text-steel-400 mt-5 text-sm">
+              🏟 {occasionRef.current.stadium} · {occasionRef.current.city}
+            </div>
+          )}
+          <div className="text-steel-500 mt-1 text-xs">{weather}</div>
+        </div>
+      )}
+
+      {/* Half-time stats overlay */}
+      {htStats && hud && (
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+          <div className="screen-enter w-72 rounded-xl border border-navy-700 bg-navy-950/92 p-4 shadow-2xl backdrop-blur">
+            <div className="text-center text-xs font-black uppercase tracking-[0.3em] text-accent-400">Half-time</div>
+            <div className="mt-2 text-center font-mono text-3xl font-black">
+              {hud.home} – {hud.away}
+            </div>
+            <div className="mt-3 space-y-1.5">
+              <StatRow label="Possession" home={hud.possHome} away={100 - hud.possHome} homeColor={n.hc} />
+              <StatRow label="Shots" home={hud.shotsH} away={hud.shotsA} homeColor={n.hc} />
+              <StatRow label="On target" home={hud.otH} away={hud.otA} homeColor={n.hc} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full-time hold */}
+      {ftHold && hud && (
+        <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center bg-navy-950/80 backdrop-blur-sm">
+          <div className="screen-enter text-center">
+            <div className="text-accent-400 text-sm font-black uppercase tracking-[0.4em]">Full-time</div>
+            <div className="mt-3 flex items-center justify-center gap-4 text-4xl font-black sm:text-5xl">
+              <span>{n.hf}</span>
+              <span className="rounded-xl bg-navy-900 px-5 py-2 font-mono tabular-nums">
+                {hud.home} – {hud.away}
+              </span>
+              <span>{n.af}</span>
+            </div>
+            {shootout?.done && (
+              <div className="text-steel-300 mt-2 text-sm">({shootout.score.home}–{shootout.score.away} on penalties)</div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Penalty shootout */}
       {shootout?.phase === 'pick' && ctrlRef.current && (

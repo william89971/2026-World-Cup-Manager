@@ -17,6 +17,7 @@ import {
   type TournamentState,
 } from '../game/tournament'
 import { ROUND_LABEL } from '../data/draw2026'
+import { venueFor } from '../data/venues'
 import { aiStrength } from '../game/difficulty'
 import {
   applyMatchResult,
@@ -279,7 +280,20 @@ export const useGame = create<GameState>((set, get) => ({
         : toSimTeam(awayTeam, autoLineupAvailable(awayTeam, career), { strength: aiS, formModifiers: formMods(career, awayTeam.id) })
 
     void userIsHome
-    return { home, away, knockout, seed: (rng() * 1e9) | 0 }
+    const venue = venueFor(fixture.id, fixture.round)
+    const lateStage = fixture.round === 'SF' || fixture.round === 'TPP' || fixture.round === 'FINAL'
+    const midStage = fixture.round === 'R32' || fixture.round === 'R16' || fixture.round === 'QF'
+    const occasion = {
+      roundLabel:
+        fixture.round === 'GROUP'
+          ? `Group Stage — Matchday ${fixture.matchday}`
+          : ROUND_LABEL[fixture.round].toUpperCase(),
+      stadium: venue.stadium,
+      city: venue.city,
+      density: lateStage ? 1 : midStage ? 0.85 : 0.7,
+      wave: lateStage,
+    }
+    return { home, away, knockout, seed: (rng() * 1e9) | 0, occasion }
   },
 
   finishUserMatch: (result, replays = []) => {

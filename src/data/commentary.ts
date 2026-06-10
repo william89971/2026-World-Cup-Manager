@@ -185,7 +185,7 @@ export function commentaryFor(
   const set = LINES[ev.type]
   if (!set) return null
   // routine events only occasionally make the feed, to avoid spam
-  if ((ev.type === 'tackle' || ev.type === 'interception') && rand() > 0.06) return null
+  if ((ev.type === 'tackle' || ev.type === 'interception') && rand() > 0.025) return null
   if ((ev.type === 'foul' || ev.type === 'freekick') && rand() > 0.2) return null
   const pool = set[tone(ctx)] ?? set.normal
   const line = pool[Math.floor(rand() * pool.length)] ?? set.normal[0]

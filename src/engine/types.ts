@@ -167,9 +167,19 @@ export interface SimTeamSetup {
 export interface MatchSetup {
   home: SimTeamSetup
   away: SimTeamSetup
-  /** Knockout match → must resolve a winner (extra time / penalties). */
+  /** Knockout match → must resolve a winner (penalties if level). */
   knockout?: boolean
   seed?: number
+  /** Presentation context (venue, occasion, atmosphere) — engine ignores it. */
+  occasion?: {
+    roundLabel: string
+    stadium: string
+    city: string
+    /** Crowd density 0–1 (group 0.7 → final 1.0). */
+    density: number
+    /** Stadium wave before kick-off (semis/final). */
+    wave: boolean
+  }
 }
 
 export interface WorldState {
