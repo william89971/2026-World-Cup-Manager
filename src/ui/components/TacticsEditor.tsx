@@ -17,6 +17,7 @@ export default function TacticsEditor({ team, value, available, onChange }: Prop
   const [selSlot, setSelSlot] = useState<number | null>(null)
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null)
   const career = useGame((s) => s.career)
+  const setInspect = useGame((s) => s.setInspectPlayer)
   const byId = (id: string) => team.squad.find((p) => p.id === id)!
   const slots = getFormation(value.formationName).slots
 
@@ -96,6 +97,7 @@ export default function TacticsEditor({ team, value, available, onChange }: Prop
                 onDragLeave={() => dragOverSlot === i && setDragOverSlot(null)}
                 onDrop={(e) => onSlotDrop(e, i)}
                 onClick={() => (selSlot === null ? setSelSlot(i) : swapIntoSlot(i, value.starters[selSlot]))}
+                onDoubleClick={() => pid && setInspect(pid)}
                 style={{ left: `${left}%`, top: `${top}%` }}
                 className={`absolute flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 cursor-grab flex-col items-center justify-center rounded-full text-[9px] font-bold leading-none transition-transform active:cursor-grabbing ${
                   sel
@@ -155,6 +157,18 @@ export default function TacticsEditor({ team, value, available, onChange }: Prop
                   <FormArrow form={formOf(career[p.id])} />
                   <span className="text-steel-400">{p.overall}</span>
                   {!avail && <span className="text-danger-500 text-[10px]">OUT</span>}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="text-steel-500 px-1 hover:text-white"
+                    title="Player details"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setInspect(p.id)
+                    }}
+                  >
+                    ⓘ
+                  </span>
                 </button>
               )
             })}

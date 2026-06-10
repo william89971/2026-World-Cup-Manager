@@ -1,19 +1,28 @@
-import { useGame } from '../../store/gameStore'
-import { getTeam } from '../../data'
+import { useGame, type TrainingFocus } from '../../store/gameStore'
+import { getTeam, TEAMS } from '../../data'
 import NavBar from '../components/NavBar'
 import ShareCardPanel from '../components/ShareCardPanel'
 import { MoraleBar } from '../components/common'
-import { groupStandings, isComplete, champion } from '../../game/tournament'
+import { groupStandings, isComplete, champion, type Fixture, type TournamentState } from '../../game/tournament'
 import { renderTournamentCard } from '../../utils/shareCard'
 import { buildTournamentCardInput } from '../../utils/shareCardData'
 import { ROUND_LABEL } from '../../data/draw2026'
+import { matchdaySlot } from '../../data/schedule'
 import { availablePlayers } from '../../game/career'
 
+const TRAINING: { id: TrainingFocus; label: string; icon: string; note: string }[] = [
+  { id: 'finishing', label: 'Finishing', icon: '🎯', note: '+3% shooting in the next match' },
+  { id: 'setpieces', label: 'Set Pieces', icon: '🚩', note: '+3% aerial presence at set pieces' },
+  { id: 'pressing', label: 'Pressing', icon: '⚡', note: '+3% defending, sharper press' },
+  { id: 'rest', label: 'Rest', icon: '🛌', note: 'Squad recovers — morale & fitness up' },
+]
+
 export default function Hub() {
-  const { userTeamId, tournament, career, news, eliminated } = useGame()
+  const { userTeamId, tournament, career, news, eliminated, trainingFocus } = useGame()
   const setScreen = useGame((s) => s.setScreen)
   const simRest = useGame((s) => s.simRestOfTournament)
   const saveAndExit = useGame((s) => s.saveAndExit)
+  const setTraining = useGame((s) => s.setTrainingFocus)
   const fixture = useGame((s) => s.userFixture)()
   const team = getTeam(userTeamId)
 
@@ -26,21 +35,40 @@ export default function Hub() {
   const standings = groupStandings(tournament, team.group)
   const done = isComplete(tournament)
   const champ = champion(tournament)
-  // campaign over (won it, or eliminated with no fixture left) → share card
   const userChampion = done && champ === userTeamId
   const campaignOver = userChampion || (eliminated && !fixture)
 
-  const opp =
-    fixture && (fixture.homeId === userTeamId ? fixture.awayId : fixture.homeId)
+  const opp = fixture && (fixture.homeId === userTeamId ? fixture.awayId : fixture.homeId)
   const oppTeam = opp ? getTeam(opp) : null
+  const slot = fixture ? matchdaySlot(fixture.round, fixture.matchday) : null
+  const knockout = fixture && fixture.round !== 'GROUP'
+
+  const ticker = buildTicker(tournament, news.map((n) => n.text))
 
   return (
     <div className="flex h-full flex-col">
       <NavBar />
-      <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 lg:grid-cols-3">
+
+      {/* Tournament stage banner — make the occasion feel big */}
+      {knockout && fixture && (
+        <div className="border-b border-navy-700 bg-gradient-to-r from-navy-900 via-accent-600/20 to-navy-900 py-2 text-center">
+          <span className="text-xl font-black uppercase tracking-[0.35em] text-accent-400">
+            {ROUND_LABEL[fixture.round]}
+          </span>
+        </div>
+      )}
+
+      <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 pb-12 lg:grid-cols-3">
         {/* Next fixture */}
         <div className="panel p-5 lg:col-span-2">
-          <div className="text-steel-400 text-[11px] font-bold uppercase">Next Fixture</div>
+          <div className="flex items-center justify-between">
+            <div className="text-steel-400 text-[11px] font-bold uppercase">Next Fixture</div>
+            {fixture && slot && (
+              <div className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${slot.prepDays <= 2 ? 'bg-warn-500/20 text-warn-500' : 'bg-navy-800 text-steel-300'}`}>
+                {slot.date} · kicks off in {slot.prepDays} day{slot.prepDays === 1 ? '' : 's'}
+              </div>
+            )}
+          </div>
           {done ? (
             <div className="py-8 text-center">
               <div className="text-2xl font-black">🏆 Tournament Complete</div>
@@ -70,6 +98,32 @@ export default function Hub() {
                 <button className="btn-primary px-10 py-3 text-base" onClick={() => setScreen('prematch')}>
                   Team Talk & Kick Off →
                 </button>
+              </div>
+
+              {/* Training focus */}
+              <div className="mt-5 border-t border-navy-700 pt-4">
+                <div className="text-steel-400 mb-2 text-[11px] font-bold uppercase">Training Focus</div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {TRAINING.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setTraining(trainingFocus === t.id ? null : t.id)}
+                      className={`rounded-lg border px-2 py-2 text-center text-xs font-semibold transition-colors ${
+                        trainingFocus === t.id
+                          ? 'border-accent-500 bg-accent-500/15 text-accent-400'
+                          : 'border-navy-600 text-steel-300 hover:bg-navy-800'
+                      }`}
+                    >
+                      <div className="text-lg">{t.icon}</div>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-steel-500 mt-1.5 text-center text-[11px]">
+                  {trainingFocus
+                    ? TRAINING.find((t) => t.id === trainingFocus)?.note
+                    : 'Pick one focus before the match for a small boost.'}
+                </div>
               </div>
             </>
           ) : (
@@ -145,6 +199,14 @@ export default function Hub() {
           </table>
         </div>
 
+        {/* Opponent spotlight */}
+        {oppTeam && fixture && (
+          <div className="panel p-5">
+            <div className="text-steel-400 text-[11px] font-bold uppercase">Opponent Spotlight</div>
+            <OpponentSpotlight oppId={oppTeam.id} tournament={tournament} />
+          </div>
+        )}
+
         {/* Campaign share card (elimination or trophy) */}
         {campaignOver && (
           <div className="panel p-5 lg:col-span-2">
@@ -157,7 +219,7 @@ export default function Hub() {
         )}
 
         {/* News feed */}
-        <div className="panel flex max-h-[420px] flex-col p-5">
+        <div className={`panel flex max-h-[420px] flex-col p-5 ${oppTeam ? 'lg:col-span-3' : ''}`}>
           <div className="text-steel-400 text-[11px] font-bold uppercase">News Feed</div>
           <div className="mt-2 flex-1 space-y-2 overflow-y-auto pr-1">
             {news.map((n) => (
@@ -166,6 +228,103 @@ export default function Hub() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* News ticker */}
+      {ticker.length > 0 && (
+        <div className="border-t border-navy-700 bg-navy-950/95 py-1.5 backdrop-blur">
+          <div className="overflow-hidden">
+            <div className="ticker-track">
+              {[0, 1].map((dup) => (
+                <span key={dup} className="text-steel-300 text-xs">
+                  {ticker.map((t, i) => (
+                    <span key={i}>
+                      <span className="text-accent-500 mx-3">●</span>
+                      {t}
+                    </span>
+                  ))}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Latest headlines + computed streak stories for the scrolling ticker. */
+function buildTicker(tournament: TournamentState, newsTexts: string[]): string[] {
+  const items = newsTexts.slice(0, 8)
+  // winning streaks: 3+ straight wins in played fixtures
+  const results = new Map<string, boolean[]>()
+  for (const f of tournament.fixtures) {
+    if (!f.played || !f.result || !f.homeId || !f.awayId) continue
+    for (const tid of [f.homeId, f.awayId]) {
+      const list = results.get(tid) ?? []
+      list.push(f.result.winnerId === tid)
+      results.set(tid, list)
+    }
+  }
+  for (const [tid, list] of results) {
+    let streak = 0
+    for (let i = list.length - 1; i >= 0 && list[i]; i--) streak++
+    if (streak >= 3) {
+      const t = TEAMS[tid]
+      items.push(`${t.flag} ${t.name} are on a ${streak}-match winning streak`)
+    }
+  }
+  return items
+}
+
+/** Next opponent's last result, recent form and key player. */
+function OpponentSpotlight({ oppId, tournament }: { oppId: string; tournament: TournamentState }) {
+  const opp = getTeam(oppId)
+  const played: Fixture[] = tournament.fixtures.filter(
+    (f) => f.played && f.result && (f.homeId === oppId || f.awayId === oppId),
+  )
+  const last = played[played.length - 1]
+  const form = played.slice(-3).map((f) => {
+    const r = f.result!
+    if (r.winnerId === oppId) return 'W'
+    if (r.winnerId === null && r.homeScore === r.awayScore) return 'D'
+    return 'L'
+  })
+  const key = [...opp.squad].sort((a, b) => Number(b.star ?? 0) - Number(a.star ?? 0) || b.overall - a.overall)[0]
+  return (
+    <div className="mt-3 space-y-3 text-sm">
+      {last && last.homeId && last.awayId ? (
+        <div>
+          <div className="text-steel-500 text-[10px] uppercase">Last result</div>
+          <div>
+            {getTeam(last.homeId).flag} {last.result!.homeScore}-{last.result!.awayScore} {getTeam(last.awayId).flag}
+          </div>
+        </div>
+      ) : (
+        <div className="text-steel-500 text-xs">No matches played yet.</div>
+      )}
+      {form.length > 0 && (
+        <div>
+          <div className="text-steel-500 text-[10px] uppercase">Form</div>
+          <div className="mt-0.5 flex gap-1">
+            {form.map((f, i) => (
+              <span
+                key={i}
+                className={`flex h-5 w-5 items-center justify-center rounded text-[11px] font-black ${
+                  f === 'W' ? 'bg-accent-500 text-navy-950' : f === 'D' ? 'bg-navy-600 text-white' : 'bg-danger-500 text-white'
+                }`}
+              >
+                {f}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      <div>
+        <div className="text-steel-500 text-[10px] uppercase">One to watch</div>
+        <div className="font-semibold">
+          {key.name} <span className="text-steel-400 text-xs">{key.position} · {key.overall}</span>
         </div>
       </div>
     </div>

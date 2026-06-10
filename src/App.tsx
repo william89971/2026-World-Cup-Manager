@@ -9,6 +9,7 @@ import PreMatch from './ui/screens/PreMatch'
 import Match from './ui/screens/Match'
 import PostMatch from './ui/screens/PostMatch'
 import Stats from './ui/screens/Stats'
+import PlayerCard from './ui/components/PlayerCard'
 
 export default function App() {
   const screen = useGame((s) => s.screen)
@@ -42,8 +43,11 @@ export default function App() {
 
   // keyed wrapper re-mounts per screen so every transition gets a fade/slide
   return (
-    <div key={started ? screen : 'menu'} className="screen-enter h-full">
-      {view}
-    </div>
+    <>
+      <div key={started ? screen : 'menu'} className="screen-enter h-full">
+        {view}
+      </div>
+      <PlayerCard />
+    </>
   )
 }

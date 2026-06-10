@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGame } from '../../store/gameStore'
 import { getTeam } from '../../data'
 import { StatRow, ratingColor } from '../components/common'
-import { generatePressConference, type PressOption, type PressQuestion } from '../../game/press'
+import { generatePressConference, type PressOption, type PressQuestion } from '../../data/pressConference'
+import { groupStandings } from '../../game/tournament'
 import { ReplayViewer } from '../../render/ReplayViewer'
 import ShareCardPanel from '../components/ShareCardPanel'
 import { renderMatchCard } from '../../utils/shareCard'
@@ -12,9 +13,10 @@ import type { GoalReplay } from '../../match/replay'
 import type { Side } from '../../engine/types'
 
 export default function PostMatch() {
-  const { userTeamId, lastResult, lastReplays, lastResultFixtureId, tournament } = useGame()
+  const { userTeamId, lastResult, lastReplays, lastResultFixtureId, tournament, career, reputation } = useGame()
   const setScreen = useGame((s) => s.setScreen)
   const applyPress = useGame((s) => s.applyPress)
+  const setInspect = useGame((s) => s.setInspectPlayer)
   const nextFixture = useGame((s) => s.userFixture)()
   const [answers, setAnswers] = useState<Record<string, PressOption>>({})
   const [submitted, setSubmitted] = useState(false)
@@ -35,22 +37,41 @@ export default function PostMatch() {
   const ratings = r ? [...r.ratings[userSide]].sort((a, b) => b.rating - a.rating) : []
   const played = ratings.filter((x) => x.minutes > 0)
 
-  const questions = useMemo(
-    () =>
-      r
-        ? generatePressConference({
-            won,
-            drew,
-            lost: !won && !drew,
-            scoreline: `${userScore}-${oppScore}`,
-            starName: played[0]?.name,
-            poorName: played[played.length - 1]?.minutes >= 45 ? played[played.length - 1]?.name : undefined,
-            opponentName: nextFixture ? getTeam(nextOpp(nextFixture, userTeamId)).name : undefined,
-          })
-        : [],
+  const questions = useMemo(() => {
+    if (!r) return []
+    const userTeam = getTeam(userTeamId)
+    const oppId = userSide === 'home' ? r.awayId : r.homeId
+    const opp = getTeam(oppId)
+    // scorers from the user's squad in this match
+    const tally = new Map<string, number>()
+    for (const e of r.events) {
+      if (e.type !== 'goal' || e.side !== userSide || !e.playerName) continue
+      tally.set(e.playerName, (tally.get(e.playerName) ?? 0) + 1)
+    }
+    // discipline: a starter sitting one yellow from a ban
+    const atRisk = userTeam.squad.find((p) => (career[p.id]?.yellowAccrued ?? 0) >= 1)
+    const standings = groupStandings(tournament, userTeam.group)
+    return generatePressConference({
+      won,
+      drew,
+      lost: !won && !drew,
+      scoreline: `${userScore}-${oppScore}`,
+      margin: userScore - oppScore,
+      oppName: opp.name,
+      oppStronger: opp.overall >= userTeam.overall + 2,
+      oppWeaker: opp.overall <= userTeam.overall - 4,
+      userScorers: [...tally.entries()].map(([name, goals]) => ({ name, goals })),
+      topOfGroup: standings[0]?.teamId === userTeamId,
+      groupStage: tournament.stage === 'GROUP',
+      roundLabel: tournament.stage,
+      disciplineRisk: atRisk?.name,
+      nextOppName: nextFixture ? getTeam(nextOpp(nextFixture, userTeamId)).name : undefined,
+      starName: played[0]?.name,
+      poorName: played[played.length - 1]?.minutes >= 45 ? played[played.length - 1]?.name : undefined,
+      reputation,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  )
+  }, [])
 
   if (!r) return null
   const home = getTeam(r.homeId)
@@ -133,7 +154,7 @@ export default function PostMatch() {
           <h3 className="text-steel-400 mb-2 text-[11px] font-bold uppercase">{getTeam(userTeamId).name} Ratings</h3>
           <div className="space-y-0.5">
             {ratings.map((p) => (
-              <div key={p.id} className="flex items-center gap-2 text-sm">
+              <div key={p.id} className="flex cursor-pointer items-center gap-2 rounded text-sm hover:bg-navy-800" onClick={() => setInspect(p.id)}>
                 <span className={`w-8 text-center font-black ${ratingColor(p.rating)}`}>{p.rating.toFixed(1)}</span>
                 <span className="flex-1 truncate">{p.name}</span>
                 {p.goals > 0 && <span className="text-accent-400 text-xs">⚽{p.goals}</span>}

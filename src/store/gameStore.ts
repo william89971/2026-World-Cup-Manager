@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Difficulty, Tactics, Team } from '../data/types'
+import type { Attributes, Difficulty, Tactics, Team } from '../data/types'
 import { TEAMS, getTeam } from '../data'
 import type { MatchResult, MatchSetup } from '../engine/types'
 import { instantSim } from '../engine/instantSim'
@@ -92,6 +92,10 @@ interface GameState {
   /** Goal replays captured during the user's last played match. */
   lastReplays: GoalReplay[]
   eliminated: boolean
+  /** Player id whose detail card is open (any screen), or null. */
+  inspectPlayerId: string | null
+  /** Pre-match training focus (cleared after each match). */
+  trainingFocus: TrainingFocus | null
 
   newGame: (teamId: string, difficulty: Difficulty) => void
   /** Resume the saved campaign. Returns false if no valid save exists. */
@@ -108,10 +112,22 @@ interface GameState {
   finishUserMatch: (result: MatchResult, replays?: GoalReplay[]) => void
   simRestOfTournament: () => void
   applyPress: (moraleDelta: number, reputationDelta: number) => void
+  setInspectPlayer: (id: string | null) => void
+  setTrainingFocus: (f: TrainingFocus | null) => void
+}
+
+export type TrainingFocus = 'finishing' | 'setpieces' | 'pressing' | 'rest'
+
+/** Per-attribute match boost from the chosen training focus (+3%). */
+const TRAINING_BOOSTS: Record<TrainingFocus, Partial<Record<keyof Attributes, number>>> = {
+  finishing: { shooting: 1.03 },
+  setpieces: { physicality: 1.03 },
+  pressing: { defending: 1.03, pace: 1.01 },
+  rest: {},
 }
 
 /** Snapshot the persistable slice of the store. */
-function toSavedGame(s: Pick<GameState, 'userTeamId' | 'difficulty' | 'tournament' | 'career' | 'tactics' | 'reputation' | 'news' | 'eliminated'>): SavedGame {
+function toSavedGame(s: Pick<GameState, 'userTeamId' | 'difficulty' | 'tournament' | 'career' | 'tactics' | 'reputation' | 'news' | 'eliminated' | 'trainingFocus'>): SavedGame {
   return {
     userTeamId: s.userTeamId,
     difficulty: s.difficulty,
@@ -121,6 +137,7 @@ function toSavedGame(s: Pick<GameState, 'userTeamId' | 'difficulty' | 'tournamen
     reputation: s.reputation,
     news: s.news,
     eliminated: s.eliminated,
+    trainingFocus: s.trainingFocus,
   }
 }
 
@@ -138,6 +155,30 @@ export const useGame = create<GameState>((set, get) => ({
   lastResultFixtureId: null,
   lastReplays: [],
   eliminated: false,
+  inspectPlayerId: null,
+  trainingFocus: null,
+
+  setInspectPlayer: (id) => set({ inspectPlayerId: id }),
+
+  setTrainingFocus: (f) => {
+    const state = get()
+    if (f === 'rest' && state.trainingFocus !== 'rest') {
+      // a recovery day lifts the whole squad a touch
+      const career = { ...state.career }
+      for (const p of getTeam(state.userTeamId).squad) {
+        if (career[p.id]) {
+          career[p.id] = {
+            ...career[p.id],
+            morale: clampN(career[p.id].morale + 2, 0, 100),
+            fitness: clampN(career[p.id].fitness + 5, 0, 100),
+          }
+        }
+      }
+      set({ trainingFocus: f, career })
+      return
+    }
+    set({ trainingFocus: f })
+  },
 
   newGame: (teamId, difficulty) => {
     rng = makeRng(20260611 ^ teamId.charCodeAt(0) * 131 ^ teamId.charCodeAt(2))
@@ -180,6 +221,7 @@ export const useGame = create<GameState>((set, get) => ({
       reputation: s.reputation,
       news: s.news,
       eliminated: s.eliminated,
+      trainingFocus: s.trainingFocus,
       lastResult: null,
       lastResultFixtureId: null,
       lastReplays: [],
@@ -226,13 +268,14 @@ export const useGame = create<GameState>((set, get) => ({
     const userIsHome = fixture.homeId === userTeamId
     const aiS = aiStrength(difficulty)
 
+    const boosts = get().trainingFocus ? TRAINING_BOOSTS[get().trainingFocus!] : undefined
     const home =
       fixture.homeId === userTeamId
-        ? toSimTeamFromTactics(homeTeam, tactics, { strength: 1, formModifiers: formMods(career, homeTeam.id) })
+        ? toSimTeamFromTactics(homeTeam, tactics, { strength: 1, formModifiers: formMods(career, homeTeam.id), boosts })
         : toSimTeam(homeTeam, autoLineupAvailable(homeTeam, career), { strength: aiS, formModifiers: formMods(career, homeTeam.id) })
     const away =
       fixture.awayId === userTeamId
-        ? toSimTeamFromTactics(awayTeam, tactics, { strength: 1, formModifiers: formMods(career, awayTeam.id) })
+        ? toSimTeamFromTactics(awayTeam, tactics, { strength: 1, formModifiers: formMods(career, awayTeam.id), boosts })
         : toSimTeam(awayTeam, autoLineupAvailable(awayTeam, career), { strength: aiS, formModifiers: formMods(career, awayTeam.id) })
 
     void userIsHome
@@ -301,6 +344,7 @@ export const useGame = create<GameState>((set, get) => ({
       lastResultFixtureId: fixture.id,
       lastReplays: replays,
       eliminated: eliminated || state.eliminated,
+      trainingFocus: null, // focus is spent on the match just played
     })
     writeSave(toSavedGame(get())) // auto-save after every completed match
   },

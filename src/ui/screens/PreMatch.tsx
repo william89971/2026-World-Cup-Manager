@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useGame } from '../../store/gameStore'
 import { getTeam } from '../../data'
 import TacticsEditor from '../components/TacticsEditor'
+import FormationCompare from '../components/FormationCompare'
 import { availablePlayers } from '../../game/career'
 import { suggestFormation } from '../../engine/lineup'
 import { ROUND_LABEL } from '../../data/draw2026'
@@ -61,7 +62,13 @@ export default function PreMatch() {
           <TacticsEditor team={team} value={tactics} available={available} onChange={setTactics} />
         </div>
 
-        <div className="panel h-fit p-4">
+        <div className="panel h-fit space-y-5 p-4">
+          <FormationCompare
+            userTeam={team}
+            userFormation={tactics.formationName}
+            oppTeam={opp}
+            oppFormation={report.formation}
+          />
           <h3 className="text-sm font-bold uppercase text-steel-400">Scouting: {opp.name}</h3>
           <div className="mt-3 space-y-3 text-sm">
             <Row label="Overall" value={`${opp.overall}`} />

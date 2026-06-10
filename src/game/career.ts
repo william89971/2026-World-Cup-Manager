@@ -16,11 +16,14 @@ export interface PlayerCareer {
   saves: number // GK saves across the tournament
   yellows: number // total yellow cards across the tournament
   apps: number
+  minutes: number
   lastRating: number | null
   avgRating: number
   ratedMatches: number
-  /** Ratings from the player's last 3 appearances (most recent last). */
-  recentRatings: number[]
+  /** Last 3 appearances: rating + who it came against (most recent last). */
+  recentRatings: { rating: number; oppId: string }[]
+  /** Human-readable driver of the latest morale change (player card). */
+  moraleNote: string | null
 }
 
 export type Form = 'up' | 'flat' | 'down' | null
@@ -28,7 +31,7 @@ export type Form = 'up' | 'flat' | 'down' | null
 /** Average of the last 3 match ratings, or null with no appearances. */
 export function formRating(c: PlayerCareer | undefined): number | null {
   if (!c || c.recentRatings.length === 0) return null
-  return c.recentRatings.reduce((s, r) => s + r, 0) / c.recentRatings.length
+  return c.recentRatings.reduce((s, r) => s + r.rating, 0) / c.recentRatings.length
 }
 
 /** Form arrow bucket: ↑ ≥7.2, → 6.2–7.2, ↓ below. */
@@ -72,10 +75,12 @@ export function initCareer(): CareerState {
         saves: 0,
         yellows: 0,
         apps: 0,
+        minutes: 0,
         lastRating: null,
         avgRating: 0,
         ratedMatches: 0,
         recentRatings: [],
+        moraleNote: null,
       }
     }
   }
@@ -131,23 +136,34 @@ export function applyMatchResult(
   sideOutcome(homeId, homeWin, draw)
   sideOutcome(awayId, !homeWin && !draw, draw)
 
-  const applyRatings = (teamId: string, ratings: MatchResult['ratings']['home']) => {
+  const applyRatings = (teamId: string, ratings: MatchResult['ratings']['home'], oppId: string) => {
     const appeared = new Set<string>()
     for (const r of ratings) {
       const c = career[r.id]
       if (!c) continue
       appeared.add(r.id)
       c.apps++
+      c.minutes += r.minutes
       c.lastRating = r.rating
       c.ratedMatches++
       c.avgRating = (c.avgRating * (c.ratedMatches - 1) + r.rating) / c.ratedMatches
-      c.recentRatings = [...c.recentRatings, r.rating].slice(-3)
+      c.recentRatings = [...c.recentRatings, { rating: r.rating, oppId }].slice(-3)
       c.fitness = clamp(c.fitness - r.minutes * 0.4, 30, 100)
       c.goals += r.goals
       c.assists += r.assists
       c.saves += r.saves
       c.yellows += r.yellow
       c.morale = clamp(c.morale + r.goals * 6 + r.assists * 3 + (r.rating > 7.5 ? 3 : r.rating < 5.5 ? -3 : 0), 0, 100)
+      c.moraleNote =
+        r.goals >= 2
+          ? 'Scored multiple goals last match'
+          : r.goals === 1
+            ? 'Scored last match'
+            : r.rating > 7.5
+              ? 'Starred in the last match'
+              : r.rating < 5.5
+                ? 'Poor showing last match'
+                : 'Got minutes last match'
 
       // yellow / red → suspension
       if (r.red) {
@@ -168,6 +184,7 @@ export function applyMatchResult(
       if (rng() < 0.035 * (1.4 - phys / 130)) {
         c.injuredMatches = rng() < 0.4 ? 2 : 1
         c.morale = clamp(c.morale - 8, 0, 100)
+        c.moraleNote = 'Picked up an injury'
         items.push(news('injury', `${r.name} (${TEAMS[teamId].name}) picked up an injury and is out for ${c.injuredMatches} match${c.injuredMatches > 1 ? 'es' : ''}.`))
       }
     }
@@ -178,11 +195,16 @@ export function applyMatchResult(
       const c = career[p.id]
       if (!c || appeared.has(p.id)) continue
       c.fitness = clamp(c.fitness + 12, 0, 100)
-      if (!unavailableBefore.has(p.id)) c.morale = clamp(c.morale - 1, 0, 100)
+      if (!unavailableBefore.has(p.id)) {
+        c.morale = clamp(c.morale - 1, 0, 100)
+        c.moraleNote = 'Unused sub'
+      } else {
+        c.moraleNote = c.injuredMatches > 0 ? 'Recovering from injury' : c.suspendedMatches > 0 ? 'Serving a suspension' : c.moraleNote
+      }
     }
   }
-  applyRatings(homeId, result.ratings.home)
-  applyRatings(awayId, result.ratings.away)
+  applyRatings(homeId, result.ratings.home, awayId)
+  applyRatings(awayId, result.ratings.away, homeId)
 
   return items
 }

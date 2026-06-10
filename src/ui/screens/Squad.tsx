@@ -8,6 +8,7 @@ const GROUP_ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3 } as const
 
 export default function Squad() {
   const { userTeamId, career } = useGame()
+  const setInspect = useGame((s) => s.setInspectPlayer)
   const team = getTeam(userTeamId)
   const squad = [...team.squad].sort((a, b) => GROUP_ORDER[a.group] - GROUP_ORDER[b.group] || b.overall - a.overall)
   const scorers = topScorers(career, 8).filter((c) => getTeam(c.teamId))
@@ -44,7 +45,7 @@ export default function Squad() {
                 const status =
                   (c?.injuredMatches ?? 0) > 0 ? <Pill tone="danger">INJ</Pill> : (c?.suspendedMatches ?? 0) > 0 ? <Pill tone="warn">SUS</Pill> : c?.yellowAccrued ? <Pill tone="warn">YC</Pill> : null
                 return (
-                  <tr key={p.id} className="border-t border-navy-800 hover:bg-navy-800/50">
+                  <tr key={p.id} className="cursor-pointer border-t border-navy-800 hover:bg-navy-800/50" onClick={() => setInspect(p.id)}>
                     <td className="px-3 py-1.5 text-steel-400">{p.number}</td>
                     <td className="px-2 py-1.5"><PosBadge group={p.group} /></td>
                     <td className="px-2 py-1.5 font-medium">
@@ -78,7 +79,7 @@ export default function Squad() {
             {scorers.map((c, i) => {
               const p = getTeam(c.teamId).squad.find((x) => x.id === c.id)
               return (
-                <div key={c.id} className="flex items-center gap-2 text-sm">
+                <div key={c.id} className="flex cursor-pointer items-center gap-2 rounded text-sm hover:bg-navy-800" onClick={() => setInspect(c.id)}>
                   <span className="text-steel-500 w-4">{i + 1}</span>
                   <span>{getTeam(c.teamId).flag}</span>
                   <span className="flex-1 truncate">{p?.name}</span>

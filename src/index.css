@@ -125,3 +125,36 @@ body {
 .form-down {
   color: var(--color-danger-500);
 }
+
+/* player card slide-up */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.slide-up {
+  animation: slide-up 0.25s ease-out both;
+}
+
+/* hub news ticker */
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ticker-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: ticker-scroll 36s linear infinite;
+}
+.ticker-track:hover {
+  animation-play-state: paused;
+}

@@ -28,9 +28,9 @@ export function archetypeOf(attrs: Attributes): Archetype {
   if (attrs.passing >= 85) candidates.push({ type: 'playmaker', key: attrs.passing })
   if (attrs.dribbling >= 85) candidates.push({ type: 'dribbler', key: attrs.dribbling })
   if (attrs.physicality >= 85 && attrs.shooting >= 75)
-    candidates.push({ type: 'targetman', key: attrs.physicality + attrs.shooting * 0.3 })
+    candidates.push({ type: 'targetman', key: (attrs.physicality + attrs.shooting) / 2 })
   if (attrs.physicality >= 85 && attrs.pace >= 75)
-    candidates.push({ type: 'workhorse', key: attrs.physicality + attrs.pace * 0.3 })
+    candidates.push({ type: 'workhorse', key: (attrs.physicality + attrs.pace) / 2 })
   if (candidates.length === 0) return 'balanced'
   candidates.sort((a, b) => b.key - a.key)
   return candidates[0].type

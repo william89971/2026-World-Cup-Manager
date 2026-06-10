@@ -1,4 +1,4 @@
-import type { Mentality, Player, Position, Pressing, TacticalRole, Tactics, Team } from '../data/types'
+import type { Attributes, Mentality, Player, Position, Pressing, TacticalRole, Tactics, Team } from '../data/types'
 import type { MatchSetup, SimTeamSetup } from './types'
 import { pickBestXI, suggestFormation, type AutoLineup } from './lineup'
 import { clamp } from './util'
@@ -19,18 +19,20 @@ export interface SimTeamOptions {
   setPieceTakers?: { corners: string; freeKicks: string; penalties: string }
   /** Per-player attribute multiplier from current form (id → ~0.95..1.05). */
   formModifiers?: Record<string, number>
+  /** Per-attribute multipliers (e.g. training focus: shooting ×1.03). */
+  boosts?: Partial<Record<keyof Attributes, number>>
 }
 
-function scaledAttrs(p: Player, strength: number) {
-  if (strength === 1) return { ...p.attributes }
-  const s = (n: number) => clamp(Math.round(n * strength), 1, 99)
+function scaledAttrs(p: Player, strength: number, boosts?: SimTeamOptions['boosts']) {
+  if (strength === 1 && !boosts) return { ...p.attributes }
+  const s = (n: number, key: keyof Attributes) => clamp(Math.round(n * strength * (boosts?.[key] ?? 1)), 1, 99)
   return {
-    pace: s(p.attributes.pace),
-    shooting: s(p.attributes.shooting),
-    passing: s(p.attributes.passing),
-    dribbling: s(p.attributes.dribbling),
-    defending: s(p.attributes.defending),
-    physicality: s(p.attributes.physicality),
+    pace: s(p.attributes.pace, 'pace'),
+    shooting: s(p.attributes.shooting, 'shooting'),
+    passing: s(p.attributes.passing, 'passing'),
+    dribbling: s(p.attributes.dribbling, 'dribbling'),
+    defending: s(p.attributes.defending, 'defending'),
+    physicality: s(p.attributes.physicality, 'physicality'),
   }
 }
 
@@ -50,7 +52,7 @@ export function toSimTeam(
       name: p.name,
       number: p.number,
       role: POS_ROLE[p.position],
-      attrs: scaledAttrs(p, eff),
+      attrs: scaledAttrs(p, eff, opts.boosts),
       overall: clamp(Math.round(p.overall * eff), 1, 99),
     }
   }

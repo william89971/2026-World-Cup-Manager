@@ -14,6 +14,7 @@ const BOARDS: { metric: Metric; title: string; icon: string; sub: string }[] = [
 
 export default function Stats() {
   const { userTeamId, career } = useGame()
+  const setInspect = useGame((s) => s.setInspectPlayer)
   const all = Object.values(career)
 
   const top = (metric: Metric) =>
@@ -27,7 +28,7 @@ export default function Stats() {
       <NavBar />
       <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 sm:grid-cols-2 xl:grid-cols-4">
         {BOARDS.map((b) => (
-          <Leaderboard key={b.metric} {...b} rows={top(b.metric)} userTeamId={userTeamId} />
+          <Leaderboard key={b.metric} {...b} rows={top(b.metric)} userTeamId={userTeamId} onInspect={setInspect} />
         ))}
       </div>
     </div>
@@ -41,6 +42,7 @@ function Leaderboard({
   sub,
   rows,
   userTeamId,
+  onInspect,
 }: {
   metric: Metric
   title: string
@@ -48,6 +50,7 @@ function Leaderboard({
   sub: string
   rows: PlayerCareer[]
   userTeamId: string
+  onInspect: (id: string) => void
 }) {
   return (
     <div className="panel h-fit p-4">
@@ -67,7 +70,8 @@ function Leaderboard({
           return (
             <div
               key={c.id}
-              className={`flex items-center gap-2 rounded px-1.5 py-1 text-sm ${mine ? 'bg-accent-500/15 text-accent-400 font-semibold' : ''}`}
+              onClick={() => onInspect(c.id)}
+              className={`flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-navy-800 ${mine ? 'bg-accent-500/15 text-accent-400 font-semibold' : ''}`}
             >
               <span className={`w-5 text-center text-xs ${i < 3 ? 'text-warn-500 font-black' : 'text-steel-500'}`}>{i + 1}</span>
               <span>{team.flag}</span>

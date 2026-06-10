@@ -5,7 +5,7 @@ import type { Difficulty, Tactics } from '../data/types'
 import type { TournamentState } from '../game/tournament'
 import type { CareerState, NewsItem } from '../game/career'
 
-export const SAVE_VERSION = 1
+export const SAVE_VERSION = 2 // v2: PlayerCareer gained minutes/moraleNote, recentRatings carry opposition
 
 export const SAVE_KEY = 'wcm2026.save'
 
@@ -21,6 +21,7 @@ export interface SavedGame {
   reputation: number
   news: NewsItem[]
   eliminated: boolean
+  trainingFocus: 'finishing' | 'setpieces' | 'pressing' | 'rest' | null
 }
 
 export interface SaveData {
